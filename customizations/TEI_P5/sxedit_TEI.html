@@ -11,12 +11,9 @@
     <script type="text/javascript" language="javascript" src="../../lib/ckeditor/ckeditor.js"></script>
 
     <script type="text/javascript" language="javascript">
-    window.onload = function(){
-      //CKEDITOR.inline("sxedit");
       CKEDITOR.plugins.addExternal('footnotes', '../../lib/CKE-Plugins/footnotes/');
       CKEDITOR.plugins.addExternal('footnoteref', '../../lib/CKE-Plugins/footnoteref/');
       CKEDITOR.config.extraPlugins = 'footnotes,footnoteref';
-    }
     </script>
     <script type="text/javascript" language="javascript" src="../../lib/saxon/SaxonceDebug/Saxonce.nocache.js"></script>
     <script type="application/xslt+xml" language="xslt2.0" src="sxedit_TEI.xsl" data-initial-template="init"></script>
