@@ -1,0 +1,34 @@
+html > body { 
+	margin: 2em;
+}
+
+div#sxedit-src {
+	display:none; 
+}
+
+aside { 
+	background-color:#ddd;
+	font-size: 80%;
+	margin-left: 2em;
+	margin-right: 2em;
+}
+
+div.toggler { 
+	float: left;
+  background-color: #4b4;
+	color: white;
+	padding: 0.2em 0.6em;
+	margin-right: 1em;
+	font-weight: bold;
+}
+
+#sxedit-main {
+  font-family: "Cambria", serif;
+  font-size: 12pt;
+}
+
+footer {
+  margin-top: 2em;
+  padding-top: 1em;
+  border-top: 1px solid #eee;
+}
