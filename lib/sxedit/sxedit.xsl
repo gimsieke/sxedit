@@ -98,16 +98,7 @@
   </xsl:template>
   
   <xsl:template name="sxedit:notes">
-    <div id="sxedit-notes" style="display:none">
-      <h3>Footnotes</h3>
-      <table id="cke-footnotes">
-        <tbody>
-          <tr>
-            <th>Note ID</th>
-            <th>Note Content</th>
-          </tr>
-        </tbody>
-      </table>
+    <div id="cke-footnotes">
     </div>
   </xsl:template>
   

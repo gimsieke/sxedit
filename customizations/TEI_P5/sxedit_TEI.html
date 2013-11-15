@@ -9,6 +9,13 @@
     <link href="../../lib/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <script type="text/javascript" language="javascript" src="../../lib/ckeditor/ckeditor.js"></script>
+    <script type="text/javascript" language="javascript">
+      CKEDITOR.plugins.addExternal('footnotes', '../../lib/CKE-Plugins/footnotes/plugin.js');
+      CKEDITOR.plugins.addExternal('footnoteref', '../../lib/CKE-Plugins/footnoteref/plugin.js');
+      CKEDITOR.editorConfig = function (config) {
+        config.extraPlugins = 'footnotes,footnoteref';
+      };
+    </script>
     <script type="text/javascript" language="javascript" src="../../lib/saxon/SaxonceDebug/Saxonce.nocache.js"></script>
     <script type="application/xslt+xml" language="xslt2.0" src="sxedit_TEI.xsl" data-initial-template="init"></script>
     <script type="text/javascript" src="../../lib/jquery/jquery-2.0.3.min.js" language="javascript"></script>
