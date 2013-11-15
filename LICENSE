@@ -1,3 +1,8 @@
+For copyright information pertaining to the included packages of Saxon CE,
+Bootstrap, jQuery, and CKEditor, see the corresponding copright notices. 
+This copyright notice pertains to everything except lib/bootstrap, lib/ckeditor,
+lib/saxon, and lib/jquery.
+
 Copyright (c) 2013, Gerrit Imsieke
 All rights reserved.
 
