@@ -122,6 +122,7 @@
   <xsl:template match="frag" mode="sxedit:response-url" as="xs:string">
     <xsl:variable name="r" as="xs:string" select="sxedit:set-url-param(replace(base-uri(), '/doc/', '/frag/'), 'xpath', @xpath)"/>
     <xsl:message select="'fragr: ', $r"/>
+    <xsl:message select="'bu: ', base-uri()"/>
     <xsl:sequence select="$r"/>
   </xsl:template>
   
@@ -173,7 +174,6 @@
 
   <xsl:template match="html:a[sxedit:contains-token(@class, 'basex-select')][matches(@data-target, '/frag/')]" priority="2" mode="ixsl:onclick">
     <!-- fill the main editor: -->
-    <xsl:message select="'fraghuhu: ', @data-target"/>
     <xsl:call-template name="sxedit:render">
       <xsl:with-param name="content" select="document(@data-target)"/>
     </xsl:call-template>

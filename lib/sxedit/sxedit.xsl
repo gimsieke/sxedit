@@ -264,7 +264,7 @@
         <xsl:non-matching-substring>
           <xsl:if test="normalize-space(.)">
             <xsl:for-each select="tokenize(., '[;&amp;]')">
-              <xsl:analyze-string select="." regex="^(.+?)(=(.*))?">
+              <xsl:analyze-string select="." regex="^(.+?)(=(.*))?$">
                 <xsl:matching-substring>
                   <!-- name/value pairs from the query string will be transformed into attributes in no namespace -->
                   <xsl:attribute name="{regex-group(1)}">
@@ -310,6 +310,5 @@
     </xsl:variable>
     <xsl:sequence select="sxedit:serialize-url($url-elt)"/>
   </xsl:function>
-
 
 </xsl:stylesheet>

@@ -118,68 +118,57 @@ declare
 };
 
 declare
-  %rest:path("/content/_doc/{$db}/{$doc}")
-  %rest:query-param("frag-expression", "{$frag-expression}")
-  %rest:query-param("title-expression", "{$title-expression}")
-  %rest:GET 
-  function sxedit:_list-frags(
-    $db as xs:string,
-    $doc as xs:string,
-    $frag-expression as xs:string?,
-    $title-expression as xs:string?
-  )
-    as item()*
-{
-  $sxedit:header,
-  <response> 
-    { for $nodes at $pos in db:open($db, $doc)//*:div[not(ancestor::*:div)][not(*:divGen)]  
-      return 
-        for $node  in $nodes
-        return <frag name="{$node/name()}" xpath="{path($node)}" title="{sxedit:frag-title($node, $title-expression, 28)}" seqno="{$pos}"/>
-    }
-  </response>
-};
-
-
-declare function sxedit:frag-title(
-  $node as element(*),
-  $title-expression as xs:string?,
-  $max-length as xs:integer
-) as xs:string
-{
-  for $n in $node
-  let 
-    $prelim-title as xs:string? :=
-      if (exists($title-expression))
-      then string(xquery:eval( "$n" || '/' || $title-expression, map { "n" := $n } ))
-      else $n/local-name(),
-    $title as xs:string :=
-      if (normalize-space($prelim-title))
-      then $prelim-title
-      else $n/local-name()
-  return 
-    if (string-length($title) gt $max-length)
-    then concat(substring($title, 1, $max-length - 1), '…')
-    else $title
-};
-
-declare
   %rest:path("/content/frag/{$db}/{$doc}")
   %rest:query-param("xpath", "{$xpath}")
+  %rest:query-param("title-expression", "{$title-expression}")
+  %rest:query-param("frag-expression", "{$frag-expression}")
   %rest:GET 
   function sxedit:get-frags(
     $db as xs:string,
     $doc as xs:string,
-    $xpath as xs:string?
+    $xpath as xs:string?,
+    $title-expression as xs:string?,
+    $frag-expression as xs:string?
   )
     as item()*
 {
   $sxedit:header,
-  for $frag as element(*) in db:open($db, $doc)/* (: xquery:eval( "db:open($db, $doc)" || ($xpath, '/*')[1], map { "db" := $db, "doc" := $doc } ) :)
-  return
-    if (db:node-id($frag) = db:node-id(db:open($db, $doc)/*))
-    then sxedit:copy($frag, for $f in db:open($db, $doc)/(*, //*:div[not(ancestor::*:div)][not(*:divGen)]) return db:node-id($f))
-    else $frag
+  for $query as xs:string in 
+   'declare function local:copy(
+      $element as element(),
+      $fragment-ids as xs:integer* 
+    ) {
+      element {node-name($element)} {
+        $element/@*, 
+        for $child in $element/node()
+        return 
+          if (db:node-id($child) = $fragment-ids)
+          then element {node-name($child)} {
+            $child/@*, 
+            attribute {"sxedit-xpath"} {path($child)} '
+            || (if ($title-expression) then concat(', $child/', $title-expression) else '') || '
+          }
+          else
+            if ($child instance of element())
+            then local:copy($child, $fragment-ids)
+            else $child
+      }
+    };
+    for $docroot in db:open($db, $doc)
+    let $frag as element(*) := $docroot' || ($xpath, "/*")[1] || '
+    return
+      local:copy($frag, for $f in ($docroot/* | $docroot' || ($frag-expression, "/*")[1] || ') return db:node-id($f))'
+  return (
+    xquery:eval(
+      $query, 
+      map { 
+        "db" := $db,
+        "doc" := $doc,
+        "xpath" := $xpath,
+        "frag-expression" := $frag-expression
+      }
+    )
+  )
 };
 
 declare function sxedit:copy(
