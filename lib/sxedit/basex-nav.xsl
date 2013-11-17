@@ -5,6 +5,7 @@
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform"  
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns:sxedit="http://www.le-tex.de/namespace/sxedit"
+  xmlns:rfc="http://www.ietf.org/rfc"
   xmlns:ixsl="http://saxonica.com/ns/interactiveXSLT"
   xmlns:prop="http://saxonica.com/ns/html-property"
   xmlns:js="http://saxonica.com/ns/globalJS"
@@ -42,7 +43,10 @@
 
   <!-- § onblur, onfocusout don't seem to work -->
   <xsl:template match="*[@id = ('db-url-span', 'sxedit-main')]" mode="ixsl:onhurz">
-    <xsl:variable name="db-url" as="xs:string" select="."/>
+    <xsl:variable name="db-url" as="xs:string" select="if ($sxedit:doc-condition) 
+                                                       then concat(., '?doc-condition=', sxedit:escape-html-uri($sxedit:doc-condition))
+                                                       else ."/>
+    <xsl:message select="'dbs: ', $db-url"/>
     <xsl:result-document href="#basex-databases-button" method="ixsl:replace-content">
       <ul class="nav navbar-nav">
         <xsl:apply-templates select="document($db-url)" mode="sxedit:nav"/>
@@ -52,6 +56,10 @@
 
   <xsl:template match="html:*[@id eq 'basex-databases-button']" mode="ixsl:onclick">
     <xsl:variable name="db-url" as="xs:string" select="id('db-url', ixsl:page())/@prop:value"/>
+    <xsl:variable name="db-url" as="xs:string" select="if ($sxedit:doc-condition) 
+                                                       then concat($db-url, '?doc-condition=', sxedit:escape-html-uri($sxedit:doc-condition))
+                                                       else $db-url"/>
+    <xsl:message select="'dbs: ', $db-url"/>
     <xsl:result-document href="#basex-dbs" method="ixsl:replace-content">
       <ul class="nav navbar-nav">
         <xsl:apply-templates select="document($db-url)" mode="sxedit:nav"/>
@@ -84,15 +92,37 @@
   </xsl:template>
   
   <xsl:template match="db" mode="sxedit:response-url" as="xs:string">
-    <xsl:sequence select="concat(replace(base-uri(), 's$', ''), '/', @name)"/>
+    <xsl:message select="'db: ', base-uri()"/>
+    <xsl:variable name="r" as="xs:string" select="replace(base-uri(), '/dbs', concat('/db/', @name))"/>
+    <xsl:message select="'dbr: ', $r"/>
+    <xsl:sequence select="$r"/>
   </xsl:template>
   
   <xsl:template match="doc" mode="sxedit:response-url" as="xs:string">
-    <xsl:sequence select="concat(replace(base-uri(), '/db/', '/doc/'), '/', @name)"/>
+    <xsl:variable name="url-elt" as="element(rfc:url)" select="sxedit:parse-url(base-uri())"/>
+    <xsl:variable name="context" select="." as="element(doc)"/>
+    <xsl:variable name="url-elt" as="element(rfc:url)">
+      <xsl:for-each select="$url-elt">
+        <xsl:copy>
+          <xsl:attribute name="rfc:base" select="replace(@rfc:base, '/db/(.+)', concat('/doc/$1/', $context/@name))"/>
+          <xsl:if test="$sxedit:frag-expression">
+            <xsl:attribute name="frag-expression" select="sxedit:escape-html-uri($sxedit:frag-expression)"/>  
+          </xsl:if>
+          <xsl:if test="$sxedit:title-expression">
+            <xsl:attribute name="title-expression" select="sxedit:escape-html-uri($sxedit:title-expression)"/>  
+          </xsl:if>
+        </xsl:copy>
+      </xsl:for-each>
+    </xsl:variable>
+    <xsl:variable name="r" as="xs:string" select="sxedit:serialize-url($url-elt)"/>
+    <xsl:message select="'docr: ', $r"/>
+    <xsl:sequence select="$r"/>
   </xsl:template>
 
   <xsl:template match="frag" mode="sxedit:response-url" as="xs:string">
-    <xsl:sequence select="concat(replace(base-uri(), '/doc/', '/frag/'), '?xpath=',  encode-for-uri(@xpath))"/>
+    <xsl:variable name="r" as="xs:string" select="sxedit:set-url-param(replace(base-uri(), '/doc/', '/frag/'), 'xpath', @xpath)"/>
+    <xsl:message select="'fragr: ', $r"/>
+    <xsl:sequence select="$r"/>
   </xsl:template>
   
   
@@ -114,14 +144,14 @@
     <xsl:message select="@*"/>
     <li>
       <a href="#" data-target="{$url}" class="basex-select">
-        <xsl:value-of select="(concat(substring(@title, 1, 20), '…'), '[anonymous]')[1]"/>
+        <xsl:value-of select="@title"/>
       </a>
     </li>
   </xsl:template>
 
   <xsl:template name="sxedit:custom-init">
     <xsl:param name="page-url" as="xs:string"/>
-    <xsl:variable name="frag" select="sxedit:url-param('frag', $page-url)" as="xs:string?"/>
+    <xsl:variable name="frag" select="sxedit:get-url-param('frag', $page-url)" as="xs:string?"/>
     <xsl:if test="$frag">
       <xsl:call-template name="sxedit:render">
         <xsl:with-param name="content" select="document(sxedit:escape-html-uri($frag))"/>
@@ -143,7 +173,7 @@
 
   <xsl:template match="html:a[sxedit:contains-token(@class, 'basex-select')][matches(@data-target, '/frag/')]" priority="2" mode="ixsl:onclick">
     <!-- fill the main editor: -->
-    <xsl:message>huhu</xsl:message>
+    <xsl:message select="'fraghuhu: ', @data-target"/>
     <xsl:call-template name="sxedit:render">
       <xsl:with-param name="content" select="document(@data-target)"/>
     </xsl:call-template>

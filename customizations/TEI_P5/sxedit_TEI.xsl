@@ -46,6 +46,10 @@
     <xsl:sequence select="count($div/ancestor::tei:div) + 1"/>
   </xsl:function>
 
+  <xsl:variable name="sxedit:doc-condition" as="xs:string" select="'[namespace-uri(/*) = ''http://www.tei-c.org/ns/1.0'']'"/>
+  <xsl:variable name="sxedit:frag-expression" as="xs:string" select="'//*:div[not(ancestor::*:div)][not(*:divGen)]'"/>
+  <xsl:variable name="sxedit:title-expression" as="xs:string" select="'*:head'"/>
+
   <xsl:template match="tei:p" mode="sxedit:render">
     <p xmlns="http://www.w3.org/1999/xhtml">
       <xsl:apply-templates select="@*, node()" mode="#current"/>

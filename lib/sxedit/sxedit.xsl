@@ -5,6 +5,7 @@
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform"  
   xmlns:tei="http://www.tei-c.org/ns/1.0"
   xmlns:sxedit="http://www.le-tex.de/namespace/sxedit"
+  xmlns:rfc="http://www.ietf.org/rfc"
   xmlns:html="http://www.w3.org/1999/xhtml" 
   xmlns:ixsl="http://saxonica.com/ns/interactiveXSLT"
   xmlns:prop="http://saxonica.com/ns/html-property"
@@ -46,18 +47,6 @@
   <xsl:template name="sxedit:custom-init">
     <!-- override this template, e.g., for prefilling the editor from a URL query parameter -->
   </xsl:template>
-
-  <xsl:function name="sxedit:url-param" as="xs:string?">
-    <xsl:param name="param-name" as="xs:string"/>
-    <xsl:param name="url" as="xs:string"/>
-    <xsl:for-each select="tokenize(replace($url, '^.+?(\?|$)', ''), '[;&amp;]')">
-      <xsl:analyze-string select="." regex="^{$param-name}=(.*)">
-        <xsl:matching-substring>
-          <xsl:sequence select="ixsl:call(ixsl:window(), 'decodeURIComponent', regex-group(1))"/>
-        </xsl:matching-substring>
-      </xsl:analyze-string>
-    </xsl:for-each>
-  </xsl:function>
 
   <xsl:template match="html:* | html:*/@*" mode="sxedit:html sxedit:remove-links">
     <xsl:copy>
@@ -254,7 +243,73 @@
     <xsl:variable name="r" as="xs:string" select="replace($r, '\}', '%7D')"/>
     <xsl:variable name="r" as="xs:string" select="replace($r, '\[', '%5B')"/>
     <xsl:variable name="r" as="xs:string" select="replace($r, '\]', '%5D')"/>
+    <xsl:variable name="r" as="xs:string" select="replace($r, ' ', '%20')"/>
     <xsl:sequence select="escape-html-uri($r)"/>
   </xsl:function>
+  
+  <xsl:function name="sxedit:get-url-param" as="xs:string?">
+    <xsl:param name="param-name" as="xs:string"/>
+    <xsl:param name="url" as="xs:string"/>
+    <xsl:sequence select="sxedit:parse-url($url)/@*[name() = $param-name]"/>
+  </xsl:function>
+
+  <xsl:function name="sxedit:parse-url" as="element(rfc:url)">
+    <xsl:param name="url" as="xs:string"/>
+    <rfc:url>
+      <xsl:analyze-string select="$url" regex="^(.+?)(\?|$)">
+        <!-- to do: split the non-query part (@rfc:scheme, @rfc:host, @rfc:port, …); deal with fragment identifiers -->
+        <xsl:matching-substring>
+          <xsl:attribute name="rfc:base" select="regex-group(1)"/>
+        </xsl:matching-substring>
+        <xsl:non-matching-substring>
+          <xsl:if test="normalize-space(.)">
+            <xsl:for-each select="tokenize(., '[;&amp;]')">
+              <xsl:analyze-string select="." regex="^(.+?)(=(.*))?">
+                <xsl:matching-substring>
+                  <!-- name/value pairs from the query string will be transformed into attributes in no namespace -->
+                  <xsl:attribute name="{regex-group(1)}">
+                    <xsl:sequence select="ixsl:call(ixsl:window(), 'decodeURIComponent', regex-group(3))"/>            
+                  </xsl:attribute>
+                </xsl:matching-substring>
+              </xsl:analyze-string>
+            </xsl:for-each>
+          </xsl:if>
+        </xsl:non-matching-substring>
+      </xsl:analyze-string>
+    </rfc:url>
+  </xsl:function>
+
+  <xsl:function name="sxedit:serialize-url" as="xs:string">
+    <xsl:param name="url-elt" as="element(rfc:url)"/>
+    <xsl:variable name="query-string" as="xs:string" 
+      select="string-join(
+                for $a in $url-elt/@*[not(namespace-uri() eq 'http://www.ietf.org/rfc')]
+                return concat($a/name(), '=', string($a)),
+                '&amp;'
+              )"/>
+    <xsl:sequence select="concat(
+                            $url-elt/@rfc:base, 
+                            if ($query-string) 
+                            then concat('?', sxedit:escape-html-uri($query-string)) 
+                            else ''
+                          )"/>
+  </xsl:function>
+
+  <xsl:function name="sxedit:set-url-param" as="xs:string">
+    <xsl:param name="url" as="xs:string"/>
+    <xsl:param name="param-name" as="xs:string"/>
+    <xsl:param name="param-value" as="xs:string"/>
+    <xsl:variable name="url-elt" as="element(rfc:url)" select="sxedit:parse-url($url)"/>
+    <xsl:variable name="url-elt" as="element(rfc:url)">
+      <xsl:for-each select="$url-elt">
+        <xsl:copy>
+          <xsl:copy-of select="@*"/>
+          <xsl:attribute name="{$param-name}" select="sxedit:escape-html-uri($param-value)"/>
+        </xsl:copy>
+      </xsl:for-each>
+    </xsl:variable>
+    <xsl:sequence select="sxedit:serialize-url($url-elt)"/>
+  </xsl:function>
+
 
 </xsl:stylesheet>
