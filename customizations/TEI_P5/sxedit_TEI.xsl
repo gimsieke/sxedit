@@ -13,8 +13,9 @@
   exclude-result-prefixes="#all">
 
   <xsl:import href="../../lib/sxedit/sxedit.xsl"/>
-  <xsl:import href="../../lib/sxedit/basex-nav.xsl"/>
+<!--  <xsl:import href="../../lib/sxedit/basex-nav.xsl"/>-->
   <xsl:import href="tei2html.xsl"/>
+  <xsl:import href="html2tei.xsl"/>
   
   <xsl:variable name="sxedit:editor-name" as="element(html:small)">
     <small xmlns="http://www.w3.org/1999/xhtml">TEI P5</small>

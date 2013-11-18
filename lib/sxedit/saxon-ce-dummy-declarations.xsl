@@ -61,6 +61,9 @@
         <xsl:param name="arg"/>
     </xsl:function>
 
-
+  <xsl:function name="ixsl:serialize-xml" override="no">
+    <xsl:param name="arg"/>
+  </xsl:function>
+  
 
 </xsl:stylesheet>

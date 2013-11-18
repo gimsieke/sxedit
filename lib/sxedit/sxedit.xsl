@@ -16,6 +16,8 @@
 
   <xsl:include href="saxon-ce-dummy-declarations.xsl"/>
 
+  <xsl:key name="by-id" match="*" use="@id"/>
+
   <xsl:template name="init">
     <xsl:result-document href="#sxedit" method="ixsl:replace-content">
       <div class="page-header">
@@ -45,6 +47,7 @@
   
   
   <xsl:template name="sxedit:custom-init">
+    <xsl:param name="page-url" as="xs:string"/>
     <!-- override this template, e.g., for prefilling the editor from a URL query parameter -->
   </xsl:template>
 
@@ -67,7 +70,8 @@
     <div class="jumbotron">
       <div class="row">
         <div id="sxedit-main" class="col-md-8" contenteditable="true">
-          <p>Start writing or load a document.</p>
+          <h2>This is a Dummy Heading</h2>
+          <p>Start writing <br/>or load a document if there is a database or file access form above.</p>
         </div>
         
         <!--<div class="input-group col-md-4">
@@ -82,7 +86,7 @@
           </div>
           <div class="input-group">
             <span class="input-group-btn">
-              <button class="btn btn-default" type="button">Download XML as</button>
+              <button class="btn btn-default" type="button" id="sxedit-download-button">Download XML as file:</button>
             </span>
             <input type="text" id="download-file-name" class="form-control" value="edited.xml"/>
           </div>
@@ -117,11 +121,6 @@
     </div>
   </xsl:template>
   
-  <xsl:template name="sxedit:src">
-    <div id="sxedit-src" style="display:none">
-    </div>
-  </xsl:template>
-  
   <xsl:template name="sxedit:render">
     <xsl:param name="content" as="document-node(element(*))"/>
     <xsl:result-document href="#sxedit-main" method="ixsl:replace-content">
@@ -136,31 +135,13 @@
     </xsl:result-document>-->
   </xsl:template>
 
-  <xsl:template name="restore">
-    <xsl:result-document href="#sxedit-src" method="ixsl:replace-content">
-      <xsl:apply-templates select="doc('html:document')/html/body/div[@id = 'sxedit']/*" mode="sxedit:restore"/>
-    </xsl:result-document>
-  </xsl:template>
-
-  <xsl:template name="generatebutton">
-    <div id="download"><input id="generate-button" type="button" value="Generate XML for download">ready</input></div>
-  </xsl:template>
-  <xsl:template name="downloadbutton">
-    <div id="download"><input id="download-button" type="button" value="Download XML">ready</input></div>
-  </xsl:template>
-
-  <xsl:template match="input[@id eq 'generate-button']" mode="ixsl:onclick">
-    <xsl:call-template name="restore" />
-    <xsl:result-document href="#download" method="ixsl:replace-content">
-      <xsl:call-template name="downloadbutton" />
-    </xsl:result-document>
-  </xsl:template>
-
-  <xsl:template match="input[@id eq 'download-button']" mode="ixsl:onclick">
-    <xsl:result-document href="#download" method="ixsl:replace-content">
-      <xsl:call-template name="generatebutton" />
-      <div id="download-link"><a href="data:text/xml;charset=utf-8,{ixsl:call(ixsl:window(), 'xser')}">download here</a></div>
-    </xsl:result-document>
+  <xsl:template match="*[@id = 'sxedit-download-button']" mode="ixsl:onclick">
+    <xsl:variable name="xmldoc" as="element(*)">
+      <xsl:apply-templates select="ancestor::*:div[last()]//*[@id = 'sxedit-main']" mode="sxedit:restore"/>
+    </xsl:variable>
+    <xsl:variable name="serialized" as="xs:string" select="ixsl:serialize-xml($xmldoc)"/>
+    <xsl:variable name="filename" select="ancestor::*:div[last()]//*[@id = 'download-file-name']/@prop:value" as="xs:string*"/>
+    <xsl:sequence select="ixsl:call(ixsl:window(), 'Sxedit.saveTextAsFile', $serialized, $filename)"/>
   </xsl:template>
 
   <xsl:template match="a[matches(@href, '#[efi]n')]" mode="sxedit:update-extract-notes">
