@@ -32,9 +32,9 @@
           <xsl:apply-templates select="$sxedit:editor-name" mode="sxedit:html"/>
         </h1>
       </div>
+      <xsl:call-template name="sxedit:nav"/>
       <xsl:call-template name="sxedit:main"/>
       <xsl:call-template name="sxedit:notes"/>
-      <xsl:call-template name="sxedit:nav"/>
     </xsl:result-document>
     <ixsl:schedule-action wait="1000">
       <xsl:call-template name="sxedit:custom-init">
@@ -64,7 +64,32 @@
   </xsl:template>
 
   <xsl:template name="sxedit:main">
-    <div id="sxedit-main" contenteditable="true"><p>Start writing or load a document.</p></div>
+    <div class="jumbotron">
+      <div class="row">
+        <div id="sxedit-main" class="col-md-8" contenteditable="true">
+          <p>Start writing or load a document.</p>
+        </div>
+        
+        <!--<div class="input-group col-md-4">
+          <span class="input-group-btn">
+            <button class="btn btn-default" type="button">Go!</button>
+          </span>
+          <input type="text" class="form-control"/>
+        </div>-->
+        <div class="col-md-4">
+          <div class="btn-group">
+            <button type="button" class="btn btn-default">Schematron check</button>
+          </div>
+          <div class="input-group">
+            <span class="input-group-btn">
+              <button class="btn btn-default" type="button">Download XML as</button>
+            </span>
+            <input type="text" id="download-file-name" class="form-control" value="edited.xml"/>
+          </div>
+          
+        </div>
+      </div>
+    </div>
     <xsl:sequence select="sxedit:enable-edit('sxedit-main', ())" />
     <script>
       hurz = new CustomEvent(
@@ -87,7 +112,8 @@
   </xsl:template>
   
   <xsl:template name="sxedit:notes">
-    <div id="cke-footnotes">
+    <div class="jumbotron">
+      <div id="cke-footnotes"> </div>
     </div>
   </xsl:template>
   

@@ -25,18 +25,24 @@
     
     <footer xmlns="http://www.w3.org/1999/xhtml" class="bs-footer">
       <nav class="navbar navbar-default" role="navigation">
-        <div class="navbar-form navbar-left" role="search">
-          <div class="form-group">
-            <input id="db-url" type="text" size="42" class="form-control" value="{$initial-uri}"/>
-          </div>
-          <!--<span id="db-url" contenteditable="true">
-            <xsl:value-of select="$initial-uri"/>
-          </span>-->
-          <!--<div id="db-url-span" contenteditable="true" >foo</div>-->
-          <xsl:sequence select="sxedit:enable-edit('db-url-span', ())" />
-          <button id="basex-databases-button" type="submit" class="btn btn-default">connect</button>
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">BaseX</a>
         </div>
-        <div id="basex-dbs"></div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+          <div class="navbar-form navbar-left" role="search">
+            <div class="form-group">
+              <input id="db-url" type="text" size="42" class="form-control" value="{$initial-uri}"/>
+            </div>
+            <button id="basex-databases-button" type="submit" class="btn btn-default">look for DBs</button>
+          </div>
+          <div id="basex-dbs"/>
+        </div>
       </nav>
     </footer>
   </xsl:template>
@@ -142,7 +148,6 @@
     <xsl:variable name="url" as="xs:string">
       <xsl:apply-templates select="." mode="sxedit:response-url"/>
     </xsl:variable>
-    <xsl:message select="@*"/>
     <li>
       <a href="#" data-target="{$url}" class="basex-select">
         <xsl:value-of select="@title"/>
@@ -173,6 +178,14 @@
   </xsl:template>
 
   <xsl:template match="html:a[sxedit:contains-token(@class, 'basex-select')][matches(@data-target, '/frag/')]" priority="2" mode="ixsl:onclick">
+    <!-- replace the fragment heading -->
+    <xsl:result-document href="?select=../ancestor::*:li[1]/*:a" method="ixsl:replace-content">
+      <span>
+        <xsl:value-of select="."/>
+      </span>
+      <!-- Dropdown triangle: -->
+      <xsl:sequence select="../ancestor::*:li[1]/*:a/*[not(self::*:span)]"/>
+    </xsl:result-document>
     <!-- fill the main editor: -->
     <xsl:call-template name="sxedit:render">
       <xsl:with-param name="content" select="document(@data-target)"/>

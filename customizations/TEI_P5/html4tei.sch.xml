@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:schema 
+  xmlns:s="http://purl.oclc.org/dsdl/schematron" 
+  xmlns:letex="http://www.le-tex.de/namespace"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns:xsl="http://www.w3.org/1999/XSL/Transform" 
+  queryBinding="xslt2" 
+  defaultPhase="#ALL">
+
+  <s:ns prefix="letex" uri="http://www.le-tex.de/namespace"/>
+  <s:ns prefix="html" uri="http://www.w3.org/1999/xhtml"/>
+
+  <s:pattern id="headings">
+    <s:rule context="">
+      <s:assert test="self::book" id="Book-root">The root element must be 'book'. Found: '<s:value-of select="name()"
+        />'.</s:assert>
+    </s:rule>
+  </s:pattern>
+
+</s:schema>

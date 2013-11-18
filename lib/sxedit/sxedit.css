@@ -25,11 +25,10 @@ div.toggler {
 #sxedit-main {
   font-family: "Cambria", serif;
   font-size: 12pt;
-  background-color: white;
   max-width: 50em;
-  background-color: #f7f7fc;
+  background-color: #f8f8f8;
   min-height:4em;
-  padding:1em;
+  padding:0.6em;
 }
 
 #sxedit-main h1, #sxedit-main h2, #sxedit-main h3, #sxedit-main h4, #sxedit-main h5, #sxedit-main h6 {
@@ -51,15 +50,13 @@ div.toggler {
 
 
 footer {
-  margin-top: 2em;
-  padding-top: 1em;
-  border-top: 1px solid #eee;
 }
 
 table.cke-footnotes-table {
   border-collapse:collapse;
-  background-color:white;
+  background-color: #f8f8f8;
   border: solid 1px #ccc;
+  font-size: 12pt;
 }
 
 table.cke-footnotes-table td, table.cke-footnotes-table th {

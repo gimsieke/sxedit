@@ -14,46 +14,16 @@
 
   <xsl:import href="../../lib/sxedit/sxedit.xsl"/>
   <xsl:import href="../../lib/sxedit/basex-nav.xsl"/>
+  <xsl:import href="tei2html.xsl"/>
   
   <xsl:variable name="sxedit:editor-name" as="element(html:small)">
     <small xmlns="http://www.w3.org/1999/xhtml">TEI P5</small>
   </xsl:variable>
 
-  <xsl:template match="@* | *" mode="sxedit:render">
-    <xsl:copy>
-      <xsl:apply-templates select="@*, node()" mode="#current"/>
-    </xsl:copy>
-  </xsl:template>
-
-  <xsl:template match="tei:div[tei:head]" mode="sxedit:render">
-    <xsl:apply-templates mode="#current"/>
-  </xsl:template>
-
-  <xsl:template match="tei:div[not(tei:head)]" mode="sxedit:render">
-    <div xmlns="http://www.w3.org/1999/xhtml">
-      <xsl:apply-templates select="@*, node()" mode="#current"/>  
-    </div>
-  </xsl:template>
-  
-  <xsl:template match="tei:div/tei:head" mode="sxedit:render">
-    <xsl:element name="h{tei:heading-level(..)}" namespace="http://www.w3.org/1999/xhtml">
-      <xsl:apply-templates select="@*, ../@*, node()" mode="#current"/>  
-    </xsl:element>
-  </xsl:template>
-  
-  <xsl:function name="tei:heading-level" as="xs:integer">
-    <xsl:param name="div" as="element(tei:div)"/>
-    <xsl:sequence select="count($div/ancestor::tei:div) + 1"/>
-  </xsl:function>
-
   <xsl:variable name="sxedit:doc-condition" as="xs:string" select="'[namespace-uri(/*) = ''http://www.tei-c.org/ns/1.0'']'"/>
   <xsl:variable name="sxedit:frag-expression" as="xs:string" select="'//*:div[not(ancestor::*:div)][not(*:divGen)]'"/>
   <xsl:variable name="sxedit:title-expression" as="xs:string" select="'*:head'"/>
 
-  <xsl:template match="tei:p" mode="sxedit:render">
-    <p xmlns="http://www.w3.org/1999/xhtml">
-      <xsl:apply-templates select="@*, node()" mode="#current"/>
-    </p>
-  </xsl:template>
+<!--  <xsl:variable name="initial-html-schematrons" as="document-node(element(s:schema)*"-->
 
 </xsl:stylesheet>
