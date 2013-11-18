@@ -13,7 +13,7 @@
   exclude-result-prefixes="#all">
 
   <xsl:import href="../../lib/sxedit/sxedit.xsl"/>
-<!--  <xsl:import href="../../lib/sxedit/basex-nav.xsl"/>-->
+  <xsl:import href="../../lib/sxedit/basex-nav.xsl"/>
   <xsl:import href="tei2html.xsl"/>
   <xsl:import href="html2tei.xsl"/>
   
