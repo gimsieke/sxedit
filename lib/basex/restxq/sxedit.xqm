@@ -61,7 +61,10 @@ declare
  : Make sure that the necessary URL escaping will be performed to
  : the query arguments when calling the RESTXQ path. 
  : @param $db Database name
- : @param $doc Document name
+ : @param $doc Document name. If it contains forward slashes, they need
+ : to be passed as '∕' (U+2215) because ordinary slashes don’t work with
+ : REST paths, for obvious reasons. Escaping them as '%2F' could not be
+ : used with BaseX for unknown reasons.
  : @param $frag-expression XPath expression to select the fragments
  : in a document. Example: '//*:div[not(ancestor::*:div)][not(*:divGen)]'
  : @param $title-expression XPath expression to select the title of 
@@ -106,7 +109,7 @@ declare
           $query, 
           map { 
             "db" := $db,
-            "doc" := $doc,
+            "doc" := replace($doc, '∕', '/'),
             "title-expression" := $title-expression, 
             "frag-expression" := $frag-expression,
             "max-title-length" := $max-title-length
@@ -163,7 +166,7 @@ declare
       $query, 
       map { 
         "db" := $db,
-        "doc" := $doc,
+        "doc" := replace($doc, '∕', '/'),
         "xpath" := $xpath,
         "frag-expression" := $frag-expression
       }

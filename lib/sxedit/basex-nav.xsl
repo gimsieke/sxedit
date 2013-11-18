@@ -106,11 +106,11 @@
   
   <xsl:template match="doc" mode="sxedit:response-url" as="xs:string">
     <xsl:variable name="url-elt" as="element(rfc:url)" select="sxedit:parse-url(base-uri())"/>
-    <xsl:variable name="context" select="." as="element(doc)"/>
+    <xsl:variable name="name" as="xs:string" select="sxedit:escape-html-uri(replace(@name, '/', '∕'))"/>
     <xsl:variable name="url-elt" as="element(rfc:url)">
       <xsl:for-each select="$url-elt">
         <xsl:copy>
-          <xsl:attribute name="rfc:base" select="replace(@rfc:base, '/db/(.+)', concat('/doc/$1/', $context/@name))"/>
+          <xsl:attribute name="rfc:base" select="replace(@rfc:base, '/db/(.+)', concat('/doc/$1/', $name))"/>
           <xsl:if test="$sxedit:frag-expression">
             <xsl:attribute name="frag-expression" select="sxedit:escape-html-uri($sxedit:frag-expression)"/>  
           </xsl:if>
@@ -173,6 +173,7 @@
         <xsl:with-param name="title-span" select="../../preceding-sibling::*:a[1]/*:span[1]" as="element(html:span)" tunnel="yes"/>
         <xsl:with-param name="title-content" select="." as="xs:string" tunnel="yes"/>
       </xsl:apply-templates>
+      <xsl:message select="'data-target-hurz: ', @data-target, ' ', ixsl:serialize-xml(document(@data-target))"/>
       <xsl:apply-templates select="document(@data-target)" mode="sxedit:nav"/>
     </xsl:result-document>
   </xsl:template>
