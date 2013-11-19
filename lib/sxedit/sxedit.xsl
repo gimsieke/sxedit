@@ -11,6 +11,8 @@
   xmlns:prop="http://saxonica.com/ns/html-property"
   xmlns:js="http://saxonica.com/ns/globalJS"
   xmlns:style="http://saxonica.com/ns/html-style-property"
+  xmlns:svrl="http://purl.oclc.org/dsdl/svrl"
+  xmlns:s="http://purl.oclc.org/dsdl/schematron"
   extension-element-prefixes="ixsl"
   exclude-result-prefixes="#all">
 
@@ -38,6 +40,9 @@
       <xsl:call-template name="sxedit:main"/>
       <xsl:call-template name="sxedit:notes"/>
     </xsl:result-document>
+    <!--<xsl:call-template name="sxedit:compile-schematrons">
+      <xsl:with-param name="schema-uris" select="$sxedit:initial-html-schematron-uris"/>
+    </xsl:call-template>-->
     <ixsl:schedule-action wait="1000">
       <xsl:call-template name="sxedit:custom-init">
         <xsl:with-param name="page-url" select="ixsl:get(ixsl:window(), 'document.location')"/>
@@ -45,6 +50,9 @@
     </ixsl:schedule-action>
   </xsl:template>
   
+  <xsl:variable name="sxedit:compiled-html-schematrons" as="item()*">
+    <xsl:sequence select="for $u in $sxedit:initial-html-schematron-uris return sxedit:compile-schematron($u)"/>
+  </xsl:variable>
   
   <xsl:template name="sxedit:custom-init">
     <xsl:param name="page-url" as="xs:string"/>
@@ -73,16 +81,9 @@
           <h2>This is a Dummy Heading</h2>
           <p>Start writing <br/>or load a document if there is a database or file access form above.</p>
         </div>
-        
-        <!--<div class="input-group col-md-4">
-          <span class="input-group-btn">
-            <button class="btn btn-default" type="button">Go!</button>
-          </span>
-          <input type="text" class="form-control"/>
-        </div>-->
         <div class="col-md-4">
           <div class="btn-group">
-            <button type="button" class="btn btn-default">Schematron check</button>
+            <button type="button" class="btn btn-default" id="sxedit-schematron-button">Schematron check</button>
           </div>
           <div class="input-group">
             <span class="input-group-btn">
@@ -95,24 +96,6 @@
       </div>
     </div>
     <xsl:sequence select="sxedit:enable-edit('sxedit-main', ())" />
-    <script>
-      hurz = new CustomEvent(
-      "hurz", 
-      {
-      detail: {
-      message: "Hello World!",
-      time: new Date(),
-      },
-      bubbles: true,
-      cancelable: true
-      }
-      );
-      
-      var b = document.getElementById("sxedit-main");
-      b.addEventListener("blur", function() {
-      document.getElementById("sxedit-main").dispatchEvent(hurz);
-      }, false); 
-    </script>
   </xsl:template>
   
   <xsl:template name="sxedit:notes">
@@ -124,7 +107,6 @@
   <xsl:template name="sxedit:render">
     <xsl:param name="content" as="document-node(element(*))"/>
     <xsl:result-document href="#sxedit-main" method="ixsl:replace-content">
-      <!--<xsl:call-template name="generatebutton" />-->
       <xsl:apply-templates select="$content" mode="sxedit:render"/>
     </xsl:result-document>
     <xsl:variable name="notes" as="element(html:div)*">
@@ -133,6 +115,19 @@
     <!--<xsl:result-document href="#sxedit-notes" method="ixsl:replace-content">
       
     </xsl:result-document>-->
+  </xsl:template>
+
+  <xsl:template match="*[@id = 'sxedit-schematron-button']" mode="ixsl:onclick">
+    <xsl:variable name="xmldoc" as="document-node(element(*))">
+      <xsl:document>
+        <xsl:apply-templates select="ancestor::*:div[last()]//*[@id = 'sxedit-main']" mode="sxedit:restore"/>
+      </xsl:document>
+    </xsl:variable>
+    <xsl:variable name="xmldoc-obj" select="ixsl:eval(concat('Saxon.parseXML(''', ixsl:serialize-xml($xmldoc), ''')'))"/>
+    <xsl:variable name="svrls" as="document-node(element(svrl:schematron-output))*"
+      select="for $s in $sxedit:compiled-html-schematrons return sxedit:validate-with-schematron($xmldoc-obj, $s)"/>
+    <xsl:variable name="serialized" as="xs:string+" select="for $svrl in $svrls return ixsl:serialize-xml($svrl)"/>
+    <xsl:message select="'SVRLS: ', $serialized"/>
   </xsl:template>
 
   <xsl:template match="*[@id = 'sxedit-download-button']" mode="ixsl:onclick">
@@ -144,46 +139,12 @@
     <xsl:sequence select="ixsl:call(ixsl:window(), 'Sxedit.saveTextAsFile', $serialized, $filename)"/>
   </xsl:template>
 
-  <xsl:template match="a[matches(@href, '#[efi]n')]" mode="sxedit:update-extract-notes">
-    <aside id="{generate-id(.)}" class="discard-on-update">
-      <xsl:variable name="id" select="concat(generate-id(.), '-anonymous-para')" as="xs:string" />
-      <p class="sxedit-wrapper unwrap" id="{$id}">
-        <!--<xsl:sequence select="sxedit:render-info-popup(.)(:§§§:)" />-->
-        new note
-      </p>
-      <!--<xsl:sequence select="sxedit:enable-edit($id, ())" />-->
-    </aside>
-  </xsl:template>
-
-
-
-  <xsl:template match="script" mode="sxedit:restore" />
-
+  <xsl:template match="*:script" mode="sxedit:restore" />
 
   <xsl:template match="*" mode="sxedit:restore-highlight-attributes">
     <xsl:param name="conf" as="element(sxedit:multi-attval-emph-conf)" />
     <xsl:sequence select="$conf/att[@mapsto = local-name(current())]/@val"/>
   </xsl:template>
-
-
-  <xsl:template match="*[@data-local-name]" mode="sxedit:restore" priority="-0.5">
-    <xsl:if test="lower-case(@data-local-name) ne @data-local-name">
-      <WHATWG-MEMBERS-MEMBERS-ARE-SMALL-LIKE-THIS>
-        <xsl:value-of select="@data-local-name"/>
-      </WHATWG-MEMBERS-MEMBERS-ARE-SMALL-LIKE-THIS>
-    </xsl:if>
-    <xsl:element name="{@data-local-name}" namespace="{@data-namspace-uri}">
-      <!--       <xsl:namespace name="{@data-namespace-prefix}" select="@data-namespace-uri" /> -->
-      <xsl:apply-templates select="@*" mode="#current" />
-      <xsl:apply-templates mode="#current" />
-      <xsl:if test="lower-case(@data-local-name) ne @data-local-name">
-        <WHATWG-MEMBERS-MEMBERS-ARE-SMALL-LIKE-THIS>
-          <xsl:value-of select="@data-local-name"/>
-        </WHATWG-MEMBERS-MEMBERS-ARE-SMALL-LIKE-THIS>
-      </xsl:if>
-    </xsl:element>
-  </xsl:template>
-
 
   <xsl:template match="node()" mode="sxedit:restore-lines">
     <xsl:param name="restricted-to" as="node()+" tunnel="yes" />
@@ -196,38 +157,6 @@
       </xsl:when>
       <xsl:otherwise/>
     </xsl:choose>
-  </xsl:template>
-
-  <xsl:template match="*" mode="sxedit:restore sxedit:update" priority="-1">
-    <xsl:element name="{name(.)}">
-      <xsl:apply-templates select="@*" mode="#current" />
-      <xsl:apply-templates mode="#current" />
-    </xsl:element>
-  </xsl:template>
-
-  <xsl:template match="@*" mode="sxedit:restore sxedit:update" priority="-0.5">
-    <xsl:attribute name="{name(.)}" select="." />
-  </xsl:template>
-
-  <xsl:template match="@*[starts-with(name(), 'data-sxedit-save-')]" mode="sxedit:restore">
-    <xsl:attribute name="{replace(replace(name(), '^data-sxedit-save-', ''), '__', ':')}" select="." />
-  </xsl:template>
-
-  <xsl:template match="*[sxedit:contains-token(@class, 'ignore')]" mode="sxedit:restore" priority="-0.75" />
-
-  <xsl:template match="*[sxedit:contains-token(@class, 'unwrap')]" mode="sxedit:restore" priority="-0.75">
-    <xsl:apply-templates mode="#current" />
-  </xsl:template>
-
-  <xsl:template match="*[sxedit:contains-token(@class, 'discard-on-update')]" mode="sxedit:update sxedit:restore" priority="-0.25" />
-    
-  <xsl:template match="  @data-namespace-prefix | @data-namespace-uri | @data-local-name
-                       | @contenteditable 
-                       | @title| @ondblclick | @style | @id" mode="sxedit:restore" />
-
-
-  <xsl:template match="@data-id" mode="sxedit:restore">
-    <xsl:attribute name="xml:id" select="." />
   </xsl:template>
 
   <xsl:function name="sxedit:contains-token" as="xs:boolean">
@@ -254,6 +183,8 @@
     <xsl:sequence select="escape-html-uri($r)"/>
   </xsl:function>
   
+  <!-- URL decomposition &amp; synthesis; query parameter access &amp; manipulation -->
+  
   <xsl:function name="sxedit:get-url-param" as="xs:string?">
     <xsl:param name="param-name" as="xs:string"/>
     <xsl:param name="url" as="xs:string"/>
@@ -262,6 +193,7 @@
 
   <xsl:function name="sxedit:parse-url" as="element(rfc:url)">
     <xsl:param name="url" as="xs:string"/>
+    <!-- If maps were supported, we’d probably use a map instead of an XML structure -->
     <rfc:url>
       <xsl:analyze-string select="$url" regex="^(.+?)(\?|$)">
         <!-- to do: split the non-query part (@rfc:scheme, @rfc:host, @rfc:port, …); deal with fragment identifiers -->
@@ -317,5 +249,54 @@
     </xsl:variable>
     <xsl:sequence select="sxedit:serialize-url($url-elt)"/>
   </xsl:function>
+
+  <!-- Invoking XSLT transforms -->
+  
+  <xsl:function name="sxedit:transform" as="document-node(element(*))">
+    <xsl:param name="doc" as="item()"/><!-- string, element, or document --> 
+    <xsl:param name="stylesheet" as="item()"/><!-- string, element, or document -->
+    <xsl:param name="params" as="xs:string"/><!-- e.g., 'param1=foo param2=bar' -->
+    <xsl:sequence select="ixsl:call(ixsl:window(), 'Sxedit.transform', $doc, $stylesheet, $params)"/>
+  </xsl:function>
+  
+  
+  <!-- Schematron -->
+  
+  <xsl:function name="sxedit:compile-schematron" as="document-node(element(*))">
+    <xsl:param name="schema" as="item()"/><!-- string, element, or document -->
+    <xsl:variable name="abstract-expanded" select="sxedit:transform($schema, '../../lib/ISO-Schematron/iso_abstract_expand.xsl', '')" as="document-node(element(s:schema))"/>
+    <xsl:variable name="compiled" select="sxedit:transform($abstract-expanded, '../../lib/ISO-Schematron/iso_svrl_for_xslt2.xsl', '')" as="document-node(element(xsl:stylesheet))"/>
+    <!--<xsl:message select="'COMP: ', ixsl:serialize-xml($compiled)"/>-->
+    <xsl:sequence select="$compiled"/>
+  </xsl:function>
+  
+  <!--<xsl:template match="*:h2" mode="ixsl:onclick">
+    <xsl:result-document href="?select=.." method="ixsl:replace-content">
+      <xsl:variable name="context" select="." as="element(*)"/>
+      <xsl:apply-templates select="../node()" mode="sxedit:html">
+        <xsl:with-param name="modify" select="$context" tunnel="yes"/>
+      </xsl:apply-templates>
+    </xsl:result-document>
+  </xsl:template>
+  
+  <xsl:template match="*:h2" mode="sxedit:html">
+    <xsl:param name="modify" as="element(*)?" tunnel="yes"/>
+    <xsl:if test=". is $modify">
+      <p>hurz</p>
+    </xsl:if>
+    <xsl:copy-of select="."/>
+  </xsl:template>
+  -->
+  
+  <xsl:function name="sxedit:validate-with-schematron" as="document-node(element(svrl:schematron-output))">
+    <xsl:param name="input-doc" as="item()"/>
+    <xsl:param name="compiled-schema" as="document-node(element(xsl:stylesheet))"/><!-- an XSLT2 stylesheet -->
+    <xsl:message select="'COMPILED: ', ixsl:serialize-xml($compiled-schema/*/*:template[18])"/>
+    <xsl:sequence select="sxedit:transform($input-doc, $compiled-schema, '')"/>
+    <!--<xsl:document>
+      <svrl:schematron-output/>
+    </xsl:document>-->
+  </xsl:function>
+  
 
 </xsl:stylesheet>

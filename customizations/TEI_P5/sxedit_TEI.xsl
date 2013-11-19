@@ -25,6 +25,6 @@
   <xsl:variable name="sxedit:frag-expression" as="xs:string" select="'//*:div[not(ancestor::*:div)][not(*:divGen)]'"/>
   <xsl:variable name="sxedit:title-expression" as="xs:string" select="'*:head'"/>
 
-<!--  <xsl:variable name="initial-html-schematrons" as="document-node(element(s:schema)*"-->
+  <xsl:variable name="sxedit:initial-html-schematron-uris" as="xs:string*" select="resolve-uri('html4tei.sch.xml')"/>
 
 </xsl:stylesheet>

@@ -11,9 +11,8 @@
   <s:ns prefix="html" uri="http://www.w3.org/1999/xhtml"/>
 
   <s:pattern id="headings">
-    <s:rule context="">
-      <s:assert test="self::book" id="Book-root">The root element must be 'book'. Found: '<s:value-of select="name()"
-        />'.</s:assert>
+    <s:rule context="*[not(ancestor::*)]/*[1]">
+      <s:assert test="matches(local-name(), '^h\d')" id="first-para-must-be-heading">The first paragraph must be a heading.</s:assert>
     </s:rule>
   </s:pattern>
 

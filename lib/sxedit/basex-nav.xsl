@@ -173,8 +173,7 @@
         <xsl:with-param name="title-span" select="../../preceding-sibling::*:a[1]/*:span[1]" as="element(html:span)" tunnel="yes"/>
         <xsl:with-param name="title-content" select="." as="xs:string" tunnel="yes"/>
       </xsl:apply-templates>
-      <xsl:message select="'data-target-hurz: ', @data-target, ' ', ixsl:serialize-xml(document(@data-target))"/>
-      <xsl:apply-templates select="document(@data-target)" mode="sxedit:nav"/>
+      <xsl:apply-templates select="document(sxedit:set-url-param(@data-target, 't', string(ixsl:eval('new Date().getTime()'))))" mode="sxedit:nav"/>
     </xsl:result-document>
   </xsl:template>
 
