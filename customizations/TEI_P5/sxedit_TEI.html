@@ -9,12 +9,14 @@
     <link rel="stylesheet" href="../../lib/sxedit/sxedit.css" type="text/css"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <script type="text/javascript" language="javascript" src="../../lib/ckeditor/ckeditor.js"></script>
-
+    
     <script type="text/javascript" language="javascript">
       CKEDITOR.plugins.addExternal('footnotes', '../../lib/CKE-Plugins/footnotes/');
       CKEDITOR.plugins.addExternal('footnoteref', '../../lib/CKE-Plugins/footnoteref/');
-      CKEDITOR.config.extraPlugins = 'footnotes,footnoteref';
+      CKEDITOR.plugins.addExternal('indexterms', '../../lib/CKE-Plugins/indexterms/');
+      CKEDITOR.config.extraPlugins = 'footnotes,footnoteref,indexterms';
     </script>
+    
     <script type="text/javascript" language="javascript" src="../../lib/saxon/SaxonceDebug/Saxonce.nocache.js"></script>
     <script type="application/xslt+xml" language="xslt2.0" src="sxedit_TEI.xsl" data-initial-template="init"></script>
     <script type="text/javascript" src="../../lib/jquery/jquery-2.0.3.min.js" language="javascript"></script>
