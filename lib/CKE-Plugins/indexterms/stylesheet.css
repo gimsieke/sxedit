@@ -1,0 +1,34 @@
+
+
+
+span.cke-index-primary{
+    border: 1px solid #000;
+    background-color: #ccc;
+}
+span.cke-index-primary-hidden{
+    display: none;
+}
+
+span.cke-index-secondary{
+    border: 1px solid #700;
+    background-color: #dcc;
+}
+span.cke-index-secondary-hidden{
+    display: none;
+}
+
+span.cke-index-tertiary{
+    border: 1px solid #070;
+    background-color: #cdc;
+}
+span.cke-index-tertiary-hidden{
+    display: none;
+}
+
+span.cke-index-reference{
+    border: 1px solid #007;
+    background-color: #ccd;
+}
+span.cke-index-reference-hidden{
+    display: none;
+}
