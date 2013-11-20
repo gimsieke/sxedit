@@ -18,6 +18,9 @@
 
   <xsl:include href="saxon-ce-dummy-declarations.xsl"/>
 
+  <!-- cannot use key(), unfortunately, because something that CKE injects into the page. 
+       Probably its iframe. Error messages complain about a QName that is the empty string.
+       Need to investigate. -->
   <xsl:key name="by-id" match="*" use="@id"/>
 
   <xsl:template name="init">
@@ -64,6 +67,13 @@
       <xsl:apply-templates select="@*, node()" mode="#current"/>
     </xsl:copy>
   </xsl:template>
+  
+  <xsl:template match="* | @*" mode="sxedit:remove-script">
+    <xsl:copy>
+      <xsl:apply-templates select="@*, node()" mode="#current"/>
+    </xsl:copy>
+  </xsl:template>
+  <xsl:template match="*:script | *:iframe" mode="sxedit:remove-script"/>
 
   <xsl:template match="html:a[@href]" mode="sxedit:html sxedit:remove-links">
     <xsl:apply-templates mode="#current"/>
@@ -118,17 +128,32 @@
   </xsl:template>
 
   <xsl:template match="*[@id = 'sxedit-schematron-button']" mode="ixsl:onclick">
-    <xsl:variable name="xmldoc" as="document-node(element(*))">
+    <xsl:variable name="xmldoc">
       <xsl:document>
-        <xsl:apply-templates select="ancestor::*:div[last()]//*[@id = 'sxedit-main']" mode="sxedit:restore"/>
+        <xsl:apply-templates select="ancestor::*:div[last()]//*:div[@id = 'sxedit-main']" mode="sxedit:remove-script"/>
       </xsl:document>
+      
     </xsl:variable>
-    <xsl:variable name="xmldoc-obj" select="ixsl:eval(concat('Saxon.parseXML(''', ixsl:serialize-xml($xmldoc), ''')'))"/>
+<!--    <xsl:variable name="xmldoc"  select="ancestor::*:div[last()]//*[@id = 'sxedit-main']"/>-->
+    <xsl:variable name="xmldoc-obj" select="sxedit:xdm2js($xmldoc)"/>
     <xsl:variable name="svrls" as="document-node(element(svrl:schematron-output))*"
       select="for $s in $sxedit:compiled-html-schematrons return sxedit:validate-with-schematron($xmldoc-obj, $s)"/>
     <xsl:variable name="serialized" as="xs:string+" select="for $svrl in $svrls return ixsl:serialize-xml($svrl)"/>
     <xsl:message select="'SVRLS: ', $serialized"/>
+    <xsl:variable name="patch-xsl" select="sxedit:transform($svrls[1], '../../lib/sxedit/svrl2xsl.xsl', '')"/>
+    <xsl:variable name="patch-xsl-obj" select="sxedit:xdm2js($patch-xsl)"/>
+    <xsl:message select="'SVRLXSL: ', ixsl:serialize-xml($patch-xsl)"/>
+    <xsl:variable name="html-frags" select="ixsl:call(ixsl:window(), 'Sxedit.transformToHTML', ixsl:page()//*:div[@id = 'sxedit'], $patch-xsl-obj, '')"/>
+    <xsl:message select="'HTMLFRAGS: ', ixsl:serialize-xml($html-frags)"/>
+    <xsl:result-document method="ixsl:replace-content" href="#sxedit">
+      <xsl:sequence select="$html-frags/*"/>
+    </xsl:result-document>
   </xsl:template>
+  
+  <xsl:function name="sxedit:xdm2js" as="item()*">
+    <xsl:param name="xdmnode" as="item()"/>
+    <xsl:sequence select="ixsl:eval(concat('Saxon.parseXML(''', replace(ixsl:serialize-xml($xdmnode), '''', '\\'''), ''')'))"/>
+  </xsl:function>
 
   <xsl:template match="*[@id = 'sxedit-download-button']" mode="ixsl:onclick">
     <xsl:variable name="xmldoc" as="element(*)">
@@ -287,6 +312,18 @@
     <xsl:copy-of select="."/>
   </xsl:template>
   -->
+  
+  <xsl:function name="sxedit:validate-page-with-schematron" as="document-node(element(svrl:schematron-output))">
+    <xsl:param name="compiled-schema" as="document-node(element(xsl:stylesheet))"/><!-- an XSLT2 stylesheet -->
+    <xsl:message select="'COMPILEDp: ', ixsl:serialize-xml($compiled-schema)"/>
+    <xsl:message select="'OBJ: ', ixsl:call(ixsl:page(), 'getElementById', 'sxedit-main')"/>
+    <xsl:variable name="svrl" select="ixsl:call(ixsl:window(), 'Sxedit.transform', ixsl:call(ixsl:page(), 'getElementById', 'sxedit-main'), $compiled-schema, '')"/>
+    <xsl:message select="'SVRLl ' , ixsl:serialize-xml($svrl)"></xsl:message>
+    <xsl:sequence select="$svrl"/>
+    <!--<xsl:document>
+      <svrl:schematron-output/>
+    </xsl:document>-->
+  </xsl:function>
   
   <xsl:function name="sxedit:validate-with-schematron" as="document-node(element(svrl:schematron-output))">
     <xsl:param name="input-doc" as="item()"/>
