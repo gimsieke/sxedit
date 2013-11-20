@@ -72,3 +72,17 @@ div.cke-footnote {
   font-family: "Cambria", serif;
   vertical-align: middle;
 }
+
+.sxedit-schematron {
+  font-size:smaller;
+  font-family:sans-serif;
+  border: 1px solid;
+}
+
+.error {
+  background-color: #fab;
+}
+
+.warning {
+  background-color: #dda;
+}
