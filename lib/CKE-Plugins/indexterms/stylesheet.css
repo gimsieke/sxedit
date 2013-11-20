@@ -4,6 +4,7 @@
 span.cke-index-primary{
     border: 1px solid #000;
     background-color: #ccc;
+    padding: .125em;
 }
 span.cke-index-primary-hidden{
     display: none;
@@ -12,6 +13,7 @@ span.cke-index-primary-hidden{
 span.cke-index-secondary{
     border: 1px solid #700;
     background-color: #dcc;
+    padding: .125em;
 }
 span.cke-index-secondary-hidden{
     display: none;
@@ -20,6 +22,7 @@ span.cke-index-secondary-hidden{
 span.cke-index-tertiary{
     border: 1px solid #070;
     background-color: #cdc;
+    padding: .125em;
 }
 span.cke-index-tertiary-hidden{
     display: none;
@@ -28,6 +31,7 @@ span.cke-index-tertiary-hidden{
 span.cke-index-reference{
     border: 1px solid #007;
     background-color: #ccd;
+    padding: .125em;
 }
 span.cke-index-reference-hidden{
     display: none;
