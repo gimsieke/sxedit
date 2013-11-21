@@ -10,8 +10,29 @@
 
   <s:pattern id="headings">
     <s:rule context="*:div[@id = 'sxedit-main']/*[not(self::*:parsererror)][1]">
-      <s:assert test="matches(local-name(), '^h\d')" id="first-para-must-be-heading" role="error">The first paragraph must be a heading. Currently: <s:value-of select="name()"/></s:assert>
+      <s:assert test="matches(local-name(), '^h\d')" 
+        id="first-para-must-be-heading" role="error">The first paragraph must be a heading. Currently: <s:value-of select="name()"/></s:assert>
     </s:rule>
   </s:pattern>
 
+  <s:pattern id="namespace">
+    <s:rule context="*">
+      <s:assert test="namespace-uri() = ('http://www.w3.org/1999/xhtml', '')" 
+        id="HTML-elements-only" role="error">Each element must be either in the XHTML namespace or in no namespace.
+        Found: <s:value-of select="namespace-uri()"/></s:assert>
+    </s:rule>
+  </s:pattern>
+  
+  <s:pattern id="captions">
+    <s:rule context="*:caption">
+      <s:assert test="every $c in * satisfies (local-name($c) = ('p', 'dl', 'ol', 'ul'))" 
+        id="only-paras-in-captions" role="error">
+        Captions may only contain paras or lists. Found: <s:value-of select="*/local-name()"/>
+      </s:assert>
+      <s:assert test="count(* | text()[matches(., '\S')]) eq 1" 
+        id="exactly-one-caption-element" role="error">
+        A caption must contain exactly one element (paragraph or list). Found: <s:value-of select="*/local-name()"/>
+      </s:assert>
+    </s:rule>
+  </s:pattern>
 </s:schema>

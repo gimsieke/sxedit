@@ -43,9 +43,6 @@
       <xsl:call-template name="sxedit:main"/>
       <xsl:call-template name="sxedit:notes"/>
     </xsl:result-document>
-    <!--<xsl:call-template name="sxedit:compile-schematrons">
-      <xsl:with-param name="schema-uris" select="$sxedit:initial-html-schematron-uris"/>
-    </xsl:call-template>-->
     <ixsl:schedule-action wait="1000">
       <xsl:call-template name="sxedit:custom-init">
         <xsl:with-param name="page-url" select="ixsl:get(ixsl:window(), 'document.location')"/>
@@ -61,19 +58,32 @@
     <xsl:param name="page-url" as="xs:string"/>
     <!-- override this template, e.g., for prefilling the editor from a URL query parameter -->
   </xsl:template>
+  
+  <xsl:template match="html:*" mode="sxedit:html sxedit:remove-links">
+    <xsl:param name="remove" as="element(*)?" tunnel="yes"/>
+    <xsl:if test="not(. is $remove)">
+      <xsl:copy>
+        <xsl:apply-templates select="@*, node()" mode="#current"/>
+      </xsl:copy>
+    </xsl:if>
+  </xsl:template>
 
-  <xsl:template match="html:* | html:*/@*" mode="sxedit:html sxedit:remove-links">
-    <xsl:copy>
-      <xsl:apply-templates select="@*, node()" mode="#current"/>
-    </xsl:copy>
+  <xsl:template match="@*" mode="sxedit:html sxedit:remove-links">
+    <xsl:copy/>
+  </xsl:template>
+
+  <xsl:template match="@class" mode="sxedit:html sxedit:remove-links">
+    <xsl:attribute name="class" select="string-join(tokenize(., '\s+')[not(. = 'sxedit-mark-underline')], ' ')"/>
   </xsl:template>
   
+
   <xsl:template match="* | @*" mode="sxedit:remove-script">
     <xsl:copy>
       <xsl:apply-templates select="@*, node()" mode="#current"/>
     </xsl:copy>
   </xsl:template>
-  <xsl:template match="*:script | *:iframe" mode="sxedit:remove-script"/>
+  
+  <xsl:template match="*:script | *[sxedit:contains-token(@class, 'sxedit-schematron')]" mode="sxedit:remove-script"/>
 
   <xsl:template match="html:a[@href]" mode="sxedit:html sxedit:remove-links">
     <xsl:apply-templates mode="#current"/>
@@ -132,26 +142,39 @@
       <xsl:document>
         <xsl:apply-templates select="ancestor::*:div[last()]//*:div[@id = 'sxedit-main']" mode="sxedit:remove-script"/>
       </xsl:document>
-      
     </xsl:variable>
-<!--    <xsl:variable name="xmldoc"  select="ancestor::*:div[last()]//*[@id = 'sxedit-main']"/>-->
     <xsl:variable name="xmldoc-obj" select="sxedit:xdm2js($xmldoc)"/>
     <xsl:variable name="svrls" as="document-node(element(svrl:schematron-output))*"
       select="for $s in $sxedit:compiled-html-schematrons return sxedit:validate-with-schematron($xmldoc-obj, $s)"/>
+    <!-- The following does not work (empty document when applying the compiled Schematron-XSLT to the fragment). Why? -->
+    <!--<xsl:variable name="svrls" as="document-node(element(svrl:schematron-output))*"
+      select="for $s in $sxedit:compiled-html-schematrons return sxedit:validate-with-schematron(ixsl:page()//*:div[@id = 'sxedit-main'], $s)"/>-->
     <xsl:variable name="serialized" as="xs:string+" select="for $svrl in $svrls return ixsl:serialize-xml($svrl)"/>
     <xsl:message select="'SVRLS: ', $serialized"/>
     <xsl:variable name="patch-xsl" select="sxedit:transform($svrls[1], '../../lib/sxedit/svrl2xsl.xsl', '')"/>
-    <xsl:variable name="patch-xsl-obj" select="sxedit:xdm2js($patch-xsl)"/>
     <xsl:message select="'SVRLXSL: ', ixsl:serialize-xml($patch-xsl)"/>
-    <xsl:variable name="html-frags" select="ixsl:call(ixsl:window(), 'Sxedit.transformToHTML', ixsl:page()//*:div[@id = 'sxedit'], $patch-xsl-obj, '')"/>
+    <xsl:variable name="html-frags" select="ixsl:call(
+                                              ixsl:window(), 
+                                              'Sxedit.transform', 
+                                              ixsl:page()//*:div[@id = 'sxedit-main'], 
+                                              ixsl:call(
+                                                ixsl:window(),
+                                                'Sxedit.transform',
+                                                $svrls[1],
+                                                '../../lib/sxedit/svrl2xsl.xsl',
+                                                ''
+                                              ),
+                                              ''
+                                            )"/>
     <xsl:message select="'HTMLFRAGS: ', ixsl:serialize-xml($html-frags)"/>
-    <xsl:result-document method="ixsl:replace-content" href="#sxedit">
-      <xsl:sequence select="$html-frags/*"/>
+    <xsl:result-document method="ixsl:replace-content" href="#sxedit-main">
+      <xsl:sequence select="$html-frags/*/node()"/>
     </xsl:result-document>
   </xsl:template>
   
   <xsl:function name="sxedit:xdm2js" as="item()*">
     <xsl:param name="xdmnode" as="item()"/>
+    <xsl:message select="'XDMNODE: ', ixsl:serialize-xml($xdmnode)"/>
     <xsl:sequence select="ixsl:eval(concat('Saxon.parseXML(''', replace(ixsl:serialize-xml($xdmnode), '''', '\\'''), ''')'))"/>
   </xsl:function>
 
@@ -185,9 +208,9 @@
   </xsl:template>
 
   <xsl:function name="sxedit:contains-token" as="xs:boolean">
-    <xsl:param name="string" as="xs:string" />
+    <xsl:param name="string" as="xs:string?" />
     <xsl:param name="word" as="xs:string" />
-         <xsl:sequence select="$word = tokenize($string, '\s+')" /> 
+    <xsl:sequence select="$word = tokenize($string, '\s+')"/> 
   </xsl:function>
 
   <xsl:function name="sxedit:enable-edit" as="element(script)">
@@ -291,7 +314,6 @@
     <xsl:param name="schema" as="item()"/><!-- string, element, or document -->
     <xsl:variable name="abstract-expanded" select="sxedit:transform($schema, '../../lib/ISO-Schematron/iso_abstract_expand.xsl', '')" as="document-node(element(s:schema))"/>
     <xsl:variable name="compiled" select="sxedit:transform($abstract-expanded, '../../lib/ISO-Schematron/iso_svrl_for_xslt2.xsl', '')" as="document-node(element(xsl:stylesheet))"/>
-    <!--<xsl:message select="'COMP: ', ixsl:serialize-xml($compiled)"/>-->
     <xsl:sequence select="$compiled"/>
   </xsl:function>
   
@@ -313,27 +335,25 @@
   </xsl:template>
   -->
   
-  <xsl:function name="sxedit:validate-page-with-schematron" as="document-node(element(svrl:schematron-output))">
-    <xsl:param name="compiled-schema" as="document-node(element(xsl:stylesheet))"/><!-- an XSLT2 stylesheet -->
-    <xsl:message select="'COMPILEDp: ', ixsl:serialize-xml($compiled-schema)"/>
-    <xsl:message select="'OBJ: ', ixsl:call(ixsl:page(), 'getElementById', 'sxedit-main')"/>
-    <xsl:variable name="svrl" select="ixsl:call(ixsl:window(), 'Sxedit.transform', ixsl:call(ixsl:page(), 'getElementById', 'sxedit-main'), $compiled-schema, '')"/>
-    <xsl:message select="'SVRLl ' , ixsl:serialize-xml($svrl)"></xsl:message>
-    <xsl:sequence select="$svrl"/>
-    <!--<xsl:document>
-      <svrl:schematron-output/>
-    </xsl:document>-->
-  </xsl:function>
-  
   <xsl:function name="sxedit:validate-with-schematron" as="document-node(element(svrl:schematron-output))">
     <xsl:param name="input-doc" as="item()"/>
-    <xsl:param name="compiled-schema" as="document-node(element(xsl:stylesheet))"/><!-- an XSLT2 stylesheet -->
+    <xsl:param name="compiled-schema" as="document-node(element(xsl:stylesheet))"/>
+    <!-- an XSLT2 stylesheet -->
     <xsl:message select="'COMPILED: ', ixsl:serialize-xml($compiled-schema/*/*:template[18])"/>
-    <xsl:sequence select="sxedit:transform($input-doc, $compiled-schema, '')"/>
-    <!--<xsl:document>
-      <svrl:schematron-output/>
-    </xsl:document>-->
+    <xsl:message select="'INPUT: ', ixsl:serialize-xml($input-doc)"/>
+    <xsl:variable name="svrl" select="sxedit:transform($input-doc, $compiled-schema, '')"
+      as="document-node(element(svrl:schematron-output))"/>
+    <xsl:message select="'SVRL: ', $svrl/*/*[position() = (1 to 5)]"/>
+    <xsl:sequence select="$svrl"/>
   </xsl:function>
   
+  <xsl:template match="*:button[@class = 'sxedit-close-message']" mode="ixsl:onclick">
+    <xsl:variable name="context" select="ancestor::*[@class = 'sxedit-schematron']" as="element(*)"/>
+    <xsl:result-document method="ixsl:replace-content" href="#sxedit-main">
+      <xsl:apply-templates select="ancestor::*:div[@id = 'sxedit-main']/node()" mode="sxedit:html">
+        <xsl:with-param name="remove" select="$context" tunnel="yes"/>
+      </xsl:apply-templates>
+    </xsl:result-document>
+  </xsl:template>
 
 </xsl:stylesheet>

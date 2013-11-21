@@ -79,6 +79,19 @@ div.cke-footnote {
   border: 1px solid;
 }
 
+.sxedit-mark-underline {
+/*  text-decoration-line: underline;
+  text-decoration-style: wavy;
+  text-decoration-color: red;
+*/
+border-bottom: 1px dotted red;
+}
+
+.sxedit-close-message {
+  float:left;
+  font-size:larger;
+}
+
 .error {
   background-color: #fab;
 }

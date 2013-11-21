@@ -47,19 +47,6 @@
     </footer>
   </xsl:template>
 
-  <!-- § onblur, onfocusout don't seem to work -->
-  <xsl:template match="*[@id = ('db-url-span', 'sxedit-main')]" mode="ixsl:onhurz">
-    <xsl:variable name="db-url" as="xs:string" select="if ($sxedit:doc-condition) 
-                                                       then concat(., '?doc-condition=', sxedit:escape-html-uri($sxedit:doc-condition))
-                                                       else ."/>
-    <xsl:message select="'dbs: ', $db-url"/>
-    <xsl:result-document href="#basex-databases-button" method="ixsl:replace-content">
-      <ul class="nav navbar-nav">
-        <xsl:apply-templates select="document($db-url)" mode="sxedit:nav"/>
-      </ul>
-    </xsl:result-document>
-  </xsl:template>
-
   <xsl:template match="html:*[@id eq 'basex-databases-button']" mode="ixsl:onclick">
     <xsl:variable name="db-url" as="xs:string" select="id('db-url', ixsl:page())/@prop:value"/>
     <xsl:variable name="db-url" as="xs:string" select="if ($sxedit:doc-condition) 

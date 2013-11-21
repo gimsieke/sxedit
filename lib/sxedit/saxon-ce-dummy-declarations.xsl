@@ -19,11 +19,13 @@
         <xsl:param name="property"/>
     </xsl:function>
 
-    <xsl:function name="ixsl:call" override="no">
-        <xsl:param name="object"/>
-        <xsl:param name="method"/>
-        <xsl:param name="arguments"/>
-    </xsl:function>
+  <xsl:function name="ixsl:call" override="no">
+    <xsl:param name="object"/>
+    <xsl:param name="method"/>
+    <xsl:param name="argument1"/>
+    <xsl:param name="argument2"/>
+    <xsl:param name="other-arguments"/>
+  </xsl:function>
 
     <xsl:function name="ixsl:eval" override="no">
         <xsl:param name="script"/>
