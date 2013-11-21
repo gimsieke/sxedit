@@ -7,10 +7,18 @@ As file storage, sxedit currently relies on a BaseX server with RESTXQ.
 You need to install a custom [XQuery module](lib/basex/restxq/sxedit.xqm) 
 in its webapp directory.
 
-Editing files on your hard disk is possible in principle, but there is
-currently no cross-browser, sans-plugin way to save your work. We will
-be adding an XML serialization via data: URI so that you can copy and 
-paste the results from a browser tab.
+But you can also start editing from scratch and download the XML file
+to your hard disk. Please note that due to security constraints of the browsers,
+you need to serve the main editor page, currently only 
+[for TEI P5](customizations/TEI_P5/sxedit_TEI.html), from a Web server.
+Editing with a local editor page is possible if you set an appropriate option in your
+browser. For Chrome, it is `-allow-file-access-from-files`. In Firefox,
+go to (about:config) and switch `security.fileuri.strict_origin_policy`
+to `false`.
 
-sxedit needs to be customized for each XML vocabulary. There is currently
-a [TEI P5 customization](customizations/TEI_P5) in preparation.
+After editing, you can download the XML file. This seems to be working
+in Chrome only, for the time being.
+
+sxedit needs to be customized for each XML vocabulary and for each
+storage backend. Please look
+at the [TEI P5 customization](customizations/TEI_P5) for an example.
