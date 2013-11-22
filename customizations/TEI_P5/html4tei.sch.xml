@@ -15,6 +15,12 @@
     </s:rule>
   </s:pattern>
 
+  <s:pattern id="skipped-headings">
+    <s:rule context="*:h2">
+      <s:report test="following-sibling::*[matches(local-name(.), '^h\d')][1]/self::*:h4">Schimpfe</s:report>
+    </s:rule>
+  </s:pattern>
+
   <s:pattern id="namespace">
     <s:rule context="*">
       <s:assert test="namespace-uri() = ('http://www.w3.org/1999/xhtml', '')" 
