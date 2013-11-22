@@ -16,8 +16,13 @@
   </s:pattern>
 
   <s:pattern id="skipped-headings">
-    <s:rule context="*:h2">
-      <s:report test="following-sibling::*[matches(local-name(.), '^h\d')][1]/self::*:h4">Schimpfe</s:report>
+    <s:rule context="*[matches(local-name(), '^h\d')]">
+      <s:let name="current-level" value="number(substring(local-name(), 2, 1))"/>
+      <s:let name="next-heading" value="following-sibling::*[matches(local-name(.), '^h\d')][1]"/>
+      <s:let name="next-level" value="if (exists($next-heading)) 
+                                      then number(substring(local-name($next-heading), 2, 1))
+                                      else $current-level"/>
+      <s:assert test="$next-level le $current-level + 1">You skipped h<s:value-of select="$current-level + 1"/> after this heading.</s:assert>
     </s:rule>
   </s:pattern>
 
