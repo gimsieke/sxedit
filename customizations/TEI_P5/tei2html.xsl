@@ -4,6 +4,7 @@
   xmlns:xs="http://www.w3.org/2001/XMLSchema"  
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform"  
   xmlns:tei="http://www.tei-c.org/ns/1.0"
+  xmlns:hub="http://le-tex.de/namespace/hub"
   xmlns:html="http://www.w3.org/1999/xhtml" 
   xmlns:sxedit="http://www.le-tex.de/namespace/sxedit"
   xmlns:ixsl="http://saxonica.com/ns/interactiveXSLT"

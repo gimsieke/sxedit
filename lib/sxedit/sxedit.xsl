@@ -179,7 +179,7 @@
   <xsl:template match="@*" mode="sxedit:create-data-attributes-for-fragment-element">
     <xsl:param name="elt" as="element(*)"/>
     <xsl:call-template name="sxedit:set-data-attribute">
-      <xsl:with-param name="name" select="concat('attribute-', name())"/>
+      <xsl:with-param name="name" select="concat('attribute-', replace(name(), ':', '___'))"/>
       <xsl:with-param name="value" select="."/>
       <xsl:with-param name="elt" select="$elt"/>
     </xsl:call-template>
@@ -198,9 +198,9 @@
     <!--<xsl:variable name="svrls" as="document-node(element(svrl:schematron-output))*"
       select="for $s in $sxedit:compiled-html-schematrons return sxedit:validate-with-schematron(ixsl:page()//*:div[@id = 'sxedit-main'], $s)"/>-->
     <xsl:variable name="serialized" as="xs:string+" select="for $svrl in $svrls return ixsl:serialize-xml($svrl)"/>
-    <xsl:message select="'SVRLS: ', $serialized"/>
+    <!--<xsl:message select="'SVRLS: ', $serialized"/>-->
     <xsl:variable name="patch-xsl" select="sxedit:transform($svrls[1], '../../lib/sxedit/svrl2xsl.xsl', '')"/>
-    <xsl:message select="'SVRLXSL: ', ixsl:serialize-xml($patch-xsl)"/>
+    <!--<xsl:message select="'SVRLXSL: ', ixsl:serialize-xml($patch-xsl)"/>-->
     <xsl:variable name="html-frags" select="ixsl:call(
                                               ixsl:window(), 
                                               'Sxedit.transform', 
@@ -214,7 +214,7 @@
                                               ),
                                               ''
                                             )"/>
-    <xsl:message select="'HTMLFRAGS: ', ixsl:serialize-xml($html-frags)"/>
+    <!--<xsl:message select="'HTMLFRAGS: ', ixsl:serialize-xml($html-frags)"/>-->
     <xsl:result-document method="ixsl:replace-content" href="#sxedit-main">
       <xsl:sequence select="$html-frags/*/node()"/>
     </xsl:result-document>
@@ -222,7 +222,7 @@
   
   <xsl:function name="sxedit:xdm2js" as="item()*">
     <xsl:param name="xdmnode" as="item()"/>
-    <xsl:message select="'XDMNODE: ', ixsl:serialize-xml($xdmnode)"/>
+    <!--<xsl:message select="'XDMNODE: ', ixsl:serialize-xml($xdmnode)"/>-->
     <xsl:sequence select="ixsl:eval(concat('Saxon.parseXML(''', replace(ixsl:serialize-xml($xdmnode), '''', '\\'''), ''')'))"/>
   </xsl:function>
 
@@ -408,8 +408,8 @@
     <xsl:param name="input-doc" as="item()"/>
     <xsl:param name="compiled-schema" as="document-node(element(xsl:stylesheet))"/>
     <!-- an XSLT2 stylesheet -->
-    <xsl:message select="'COMPILED: ', ixsl:serialize-xml($compiled-schema/*/*:template[18])"/>
-    <xsl:message select="'INPUT: ', ixsl:serialize-xml($input-doc)"/>
+    <!--<xsl:message select="'COMPILED: ', ixsl:serialize-xml($compiled-schema/*/*:template[18])"/>-->
+<!--    <xsl:message select="'INPUT: ', ixsl:serialize-xml($input-doc)"/>-->
     <xsl:variable name="svrl" select="sxedit:transform($input-doc, $compiled-schema, '')"
       as="document-node(element(svrl:schematron-output))"/>
     <xsl:message select="'SVRL: ', $svrl/*/*[position() = (1 to 5)]"/>

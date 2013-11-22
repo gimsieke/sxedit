@@ -34,7 +34,15 @@
       <xsl:when test="@data-element-name">
         <xsl:element name="{@data-element-name}" namespace="{(@data-namespace-uri, '')[1]}">
           <xsl:apply-templates select="@*[starts-with(name(), 'data-attribute-')]" mode="#current"/>
-          <xsl:apply-templates mode="#current"/>
+          <xsl:variable name="nested-headings" as="element(*)*">
+            <xsl:call-template name="tei:nest-headings">
+              <xsl:with-param name="nodes" select="*"/>
+              <xsl:with-param name="headings" select="*[sxedit:isHeading(.)]"/>
+              <xsl:with-param name="skip-first-level" select="true()"/>
+            </xsl:call-template>
+          </xsl:variable>
+          <!-- could transform in another mode -->
+          <xsl:sequence select="$nested-headings"/>
         </xsl:element>
       </xsl:when>
       <xsl:otherwise>
@@ -71,38 +79,49 @@
   </xsl:template>
   
   <xsl:template match="@*[starts-with(name(), 'data-attribute-')]" mode="sxedit:restore">
-    <xsl:attribute name="{replace(name(), '^data-attribute-', '')}" select="."/>
+    <xsl:attribute name="{replace(replace(name(), '^data-attribute-', ''), '___', ':')}" select="."/>
   </xsl:template>
 
   <xsl:template name="tei:nest-headings" as="element()*">
     <xsl:param name="nodes" as="element(*)*"/>
     <xsl:param name="headings" as="element(*)*"/>
+    <xsl:param name="skip-first-level" as="xs:boolean" select="false()"/>
     <xsl:variable name="min-level" select="min((7, for $n in $headings return sxedit:heading-level($n)))" as="xs:double"/>
     <xsl:choose>
       <xsl:when test="$min-level eq 7">
         <xsl:apply-templates select="$nodes" mode="#current"/>
       </xsl:when>
       <xsl:otherwise>
-          <xsl:for-each-group select="$nodes"
-            group-starting-with="*[exists(. intersect $headings)][sxedit:heading-level(.) = $min-level]">
-            <xsl:choose>
-              <xsl:when test="sxedit:heading-level(.) = $min-level">
-              <div>
+        <xsl:for-each-group select="$nodes"
+          group-starting-with="*[exists(. intersect $headings)][sxedit:heading-level(.) = $min-level]">
+          <xsl:choose>
+            <xsl:when test="sxedit:heading-level(.) = $min-level">
+              <xsl:variable name="current-heding-level" as="xs:double" select="sxedit:heading-level(.)"/>
+              <xsl:variable name="result" as="node()*">
                 <_____head>
                   <xsl:apply-templates select="@*, node()" mode="#current"/>
                 </_____head>
-                <xsl:variable name="current-heding-level" as="xs:double" select="sxedit:heading-level(.)"/>
                 <xsl:call-template name="tei:nest-headings">
                   <xsl:with-param name="nodes" select="current-group()[position() gt 1]"/>
                   <xsl:with-param name="headings" select="$headings[sxedit:heading-level(.) gt $current-heding-level]"/>
                 </xsl:call-template>
-              </div>
-              </xsl:when>
-              <xsl:otherwise>
-                <xsl:apply-templates select="current-group()" mode="#current"/>
-              </xsl:otherwise>
-            </xsl:choose>
-          </xsl:for-each-group>
+              </xsl:variable>
+              <xsl:choose>
+                <xsl:when test="$skip-first-level">
+                  <xsl:sequence select="$result"/>
+                </xsl:when>
+                <xsl:otherwise>
+                  <div>
+                    <xsl:sequence select="$result"/>
+                  </div>
+                </xsl:otherwise>
+              </xsl:choose>
+            </xsl:when>
+            <xsl:otherwise>
+              <xsl:apply-templates select="current-group()" mode="#current"/>
+            </xsl:otherwise>
+          </xsl:choose>
+        </xsl:for-each-group>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
