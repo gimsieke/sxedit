@@ -53,7 +53,7 @@
         <xslout:template match="*:div[@id = '{$top-level-div-id}']{replace(replace(../@location, '\[namespace-uri[^\]]+\]', ''), '^/(\*:)div\[1\]', '')}">
           <div class="sxedit-schematron">
             <p>
-              <button class="sxedit-close-message">close message</button>
+              <button type="button" class="btn btn-default btn-sm sxedit-close-message">close message</button>
             </p>
             <xsl:apply-templates select="current-group()"/>
           </div>

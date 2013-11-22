@@ -176,6 +176,7 @@
     <!-- fill the main editor: -->
     <xsl:call-template name="sxedit:render">
       <xsl:with-param name="content" select="document(@data-target)"/>
+      <xsl:with-param name="fragment-url" select="@data-target"/>
     </xsl:call-template>
   </xsl:template>
   

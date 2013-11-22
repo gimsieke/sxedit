@@ -94,12 +94,22 @@
       that implements this template) -->
   </xsl:template>
 
+  <!-- This template has to be invoked whenever a storage adapter loads a new file -->  
+  <xsl:template name="sxedit:set-data-attribute">
+    <xsl:param name="name" as="xs:string"/>
+    <xsl:param name="value" as="xs:string"/>
+    <xsl:param name="elt" as="element(*)"/>
+    <xsl:for-each select="$elt">
+      <ixsl:set-attribute name="data-{$name}" select="$value"/>
+    </xsl:for-each>
+  </xsl:template>
+
   <xsl:template name="sxedit:main">
     <div class="jumbotron">
       <div class="row">
         <div id="sxedit-main" class="col-md-8" contenteditable="true">
           <h2>This is a Dummy Heading</h2>
-          <p>Start writing <br/>or load a document if there is a database or file access form above.</p>
+          <p>Start writing or load a document if there is a database or file access form above.</p>
         </div>
         <div class="col-md-4">
           <div class="btn-group">
@@ -126,6 +136,8 @@
   
   <xsl:template name="sxedit:render">
     <xsl:param name="content" as="document-node(element(*))"/>
+    <xsl:param name="fragment-url" as="xs:string?"/>
+    <xsl:variable name="sxedit-main-div" select="ancestor::*:div[last()]//*:div[@id = 'sxedit-main']" as="element(*)"/>
     <xsl:result-document href="#sxedit-main" method="ixsl:replace-content">
       <xsl:apply-templates select="$content" mode="sxedit:render"/>
     </xsl:result-document>
@@ -135,6 +147,42 @@
     <!--<xsl:result-document href="#sxedit-notes" method="ixsl:replace-content">
       
     </xsl:result-document>-->
+    <xsl:if test="$fragment-url">
+      <xsl:call-template name="sxedit:set-data-attribute">
+        <xsl:with-param name="name" select="'fragment-url'"/>
+        <xsl:with-param name="value" select="$fragment-url"/>
+        <xsl:with-param name="elt" select="$sxedit-main-div"/>
+      </xsl:call-template>
+    </xsl:if>
+    <xsl:apply-templates select="$content" mode="sxedit:create-data-attributes-for-fragment-element">
+      <xsl:with-param name="elt" select="$sxedit-main-div"/>
+    </xsl:apply-templates>
+  </xsl:template>
+
+  <xsl:template match="*" mode="sxedit:create-data-attributes-for-fragment-element">
+    <xsl:param name="elt" as="element(*)"/>
+    <xsl:call-template name="sxedit:set-data-attribute">
+      <xsl:with-param name="name" select="'element-name'"/>
+      <xsl:with-param name="value" select="name()"/>
+      <xsl:with-param name="elt" select="$elt"/>
+    </xsl:call-template>
+    <xsl:call-template name="sxedit:set-data-attribute">
+      <xsl:with-param name="name" select="'namespace-uri'"/>
+      <xsl:with-param name="value" select="namespace-uri()"/>
+      <xsl:with-param name="elt" select="$elt"/>
+    </xsl:call-template>
+    <xsl:apply-templates select="@*" mode="#current">
+      <xsl:with-param name="elt" select="$elt"/>
+    </xsl:apply-templates>
+  </xsl:template>
+
+  <xsl:template match="@*" mode="sxedit:create-data-attributes-for-fragment-element">
+    <xsl:param name="elt" as="element(*)"/>
+    <xsl:call-template name="sxedit:set-data-attribute">
+      <xsl:with-param name="name" select="concat('attribute-', name())"/>
+      <xsl:with-param name="value" select="."/>
+      <xsl:with-param name="elt" select="$elt"/>
+    </xsl:call-template>
   </xsl:template>
 
   <xsl:template match="*[@id = 'sxedit-schematron-button']" mode="ixsl:onclick">
@@ -179,12 +227,24 @@
   </xsl:function>
 
   <xsl:template match="*[@id = 'sxedit-download-button']" mode="ixsl:onclick">
-    <xsl:variable name="xmldoc" as="element(*)">
-      <xsl:apply-templates select="ancestor::*:div[last()]//*[@id = 'sxedit-main']" mode="sxedit:restore"/>
+    <xsl:variable name="xmldoc" as="document-node(element(*))">
+      <xsl:call-template name="sxedit:restore"/>
     </xsl:variable>
-    <xsl:variable name="serialized" as="xs:string" select="ixsl:serialize-xml($xmldoc)"/>
+    <xsl:variable name="serialized" as="xs:string" select="sxedit:serialize-xml($xmldoc)"/>
     <xsl:variable name="filename" select="ancestor::*:div[last()]//*[@id = 'download-file-name']/@prop:value" as="xs:string*"/>
     <xsl:sequence select="ixsl:call(ixsl:window(), 'Sxedit.saveTextAsFile', $serialized, $filename)"/>
+  </xsl:template>
+
+  <xsl:template name="sxedit:restore" as="document-node(element(*))">
+    <xsl:variable name="sxedit-div" as="element(*)" 
+      select="ancestor::*:div[last()]/descendant-or-self::*:div[@id = 'sxedit']"/>
+    <xsl:variable name="sxedit-main-div" as="element(*)" 
+      select="$sxedit-div/descendant::*:div[@id = 'sxedit-main']"/>
+    <xsl:variable name="sxedit-notes-table" as="element(*)?" 
+      select="$sxedit-div/descendant::*:div[@id = 'cke-footnotes']/*:table[sxedit:contains-token(@class, 'cke-footnotes-table')]"/>
+    <xsl:document>
+      <xsl:apply-templates select="$sxedit-main-div" mode="sxedit:restore"/>
+    </xsl:document>
   </xsl:template>
 
   <xsl:template match="*:script" mode="sxedit:restore" />
@@ -298,6 +358,15 @@
     <xsl:sequence select="sxedit:serialize-url($url-elt)"/>
   </xsl:function>
 
+  <!-- Working around not being able to serialize elements called 'body'
+  (no matter what namespace they’re in). 
+  By convention, we prepend five underscores to the element name. -->
+
+  <xsl:function name="sxedit:serialize-xml" as="xs:string">
+    <xsl:param name="node" as="item()"/>
+    <xsl:sequence select="replace(ixsl:serialize-xml($node), '(&lt;/?)_____', '$1')"/>
+  </xsl:function>
+
   <!-- Invoking XSLT transforms -->
   
   <xsl:function name="sxedit:transform" as="document-node(element(*))">
@@ -347,8 +416,8 @@
     <xsl:sequence select="$svrl"/>
   </xsl:function>
   
-  <xsl:template match="*:button[@class = 'sxedit-close-message']" mode="ixsl:onclick">
-    <xsl:variable name="context" select="ancestor::*[@class = 'sxedit-schematron']" as="element(*)"/>
+  <xsl:template match="*:button[sxedit:contains-token(@class, 'sxedit-close-message')]" mode="ixsl:onclick">
+    <xsl:variable name="context" select="ancestor::*[sxedit:contains-token(@class, 'sxedit-schematron')]" as="element(*)"/>
     <xsl:result-document method="ixsl:replace-content" href="#sxedit-main">
       <xsl:apply-templates select="ancestor::*:div[@id = 'sxedit-main']/node()" mode="sxedit:html">
         <xsl:with-param name="remove" select="$context" tunnel="yes"/>

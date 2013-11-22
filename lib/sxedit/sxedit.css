@@ -76,7 +76,7 @@ div.cke-footnote {
 .sxedit-schematron {
   font-size:smaller;
   font-family:sans-serif;
-  border: 1px solid;
+/*  border: 1px solid;*/
 }
 
 .sxedit-mark-underline {
@@ -89,7 +89,7 @@ border-bottom: 1px dotted red;
 
 .sxedit-close-message {
   float:left;
-  font-size:larger;
+  margin-right:0.4em;
 }
 
 .error {
