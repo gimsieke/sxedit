@@ -209,8 +209,6 @@ declare
     $wrapper as document-node(element(sxedit:frag))
   )
   {
-  replace node db:open($wrapper/*:frag/@db, $wrapper/*:frag/@doc)//*[path() eq $wrapper/*:frag/@xpath]
-    with $wrapper/*:frag/*,
     db:output(
   <rest:response>
     <http:response status="200">
@@ -219,7 +217,9 @@ declare
       <http:header name="Content-Type" value="text/xml; charset=utf-8"/>
      </http:response>
   </rest:response>
-  )
-  }
+  ),
+    replace node db:open($wrapper/*:frag/@db, $wrapper/*:frag/@doc)//*[path() eq $wrapper/*:frag/@xpath]
+    with $wrapper/*:frag/*
+}
 ;
 
