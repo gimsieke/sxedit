@@ -22,7 +22,8 @@
       <s:let name="next-level" value="if (exists($next-heading)) 
                                       then number(substring(local-name($next-heading), 2, 1))
                                       else $current-level"/>
-      <s:assert test="$next-level le $current-level + 1">You skipped h<s:value-of select="$current-level + 1"/> after this heading.</s:assert>
+      <s:assert test="$next-level le $current-level + 1" id="skipped-heading" role="error">You skipped 
+        h<s:value-of select="$current-level + 1"/> after this heading.</s:assert>
     </s:rule>
   </s:pattern>
 

@@ -62,9 +62,9 @@ declare
  : the query arguments when calling the RESTXQ path. 
  : @param $db Database name
  : @param $doc Document name. If it contains forward slashes, they need
- : to be passed as '∕' (U+2215) because ordinary slashes don’t work with
- : REST paths, for obvious reasons. Escaping them as '%2F' could not be
- : used with BaseX for unknown reasons.
+ : to be passed as '∕' (U+2215, this feels phishy, doesn’t it?) because 
+ : ordinary slashes don’t work with REST paths, for obvious reasons. 
+ : Escaping them as '%2F' could not be used with BaseX for unknown reasons.
  : @param $frag-expression XPath expression to select the fragments
  : in a document. Example: '//*:div[not(ancestor::*:div)][not(*:divGen)]'
  : @param $title-expression XPath expression to select the title of 
@@ -191,3 +191,35 @@ declare function sxedit:copy(
             else $child
     }
 };
+
+(:~
+ : This function accepts an XML document whose top-level element
+ : must be an *:frag element with attributes db, doc, and xpath.
+ : These attributes specify where to store the payload which must 
+ : be the only child of the top-level *:frag element.
+ : Make sure that the necessary URL escaping will be performed to
+ : the query arguments when calling the RESTXQ path. 
+ : @param $wrapper The POSTed message
+ :)
+declare
+  %rest:path("/content/save-frag")
+  %rest:POST("{$wrapper}")
+  %updating 
+  function sxedit:save-frag(
+    $wrapper as document-node(element(sxedit:frag))
+  )
+  {
+  replace node db:open($wrapper/*:frag/@db, $wrapper/*:frag/@doc)//*[path() eq $wrapper/*:frag/@xpath]
+    with $wrapper/*:frag/*,
+    db:output(
+  <rest:response>
+    <http:response status="200">
+      <http:header name="Content-Language" value="en"/>
+      <http:header name="Access-Control-Allow-Origin" value="*"/>
+      <http:header name="Content-Type" value="text/xml; charset=utf-8"/>
+     </http:response>
+  </rest:response>
+  )
+  }
+;
+

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<frag xmlns="http://www.le-tex.de/namespace/sxedit" 
+  db="PG32856"
+  doc="32856.tei.xml"
+  xpath="/Q{http://www.tei-c.org/ns/1.0}TEI[1]/Q{http://www.tei-c.org/ns/1.0}text[1]/Q{http://www.tei-c.org/ns/1.0}front[1]/Q{http://www.tei-c.org/ns/1.0}div[3]">
+  <div xmlns="http://www.tei-c.org/ns/1.0">
+    <head>Such Demo</head>
+    <p>foo</p>
+    <p>Many payload.</p>
+    <p>Wow!</p>
+  </div>
+</frag>

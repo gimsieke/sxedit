@@ -42,6 +42,9 @@
             <button id="basex-databases-button" type="submit" class="btn btn-default">look for DBs</button>
           </div>
           <div id="basex-dbs"/>
+          <div class="navbar-form navbar-left" role="search">
+            <button id="basex-save-button" type="submit" class="btn btn-default" style="display:none">save</button>
+          </div>
         </div>
       </nav>
     </footer>
@@ -57,10 +60,25 @@
       <ul class="nav navbar-nav">
         <xsl:apply-templates select="document($db-url)" mode="sxedit:nav"/>
       </ul>
-      <div id="basex-docs"></div>
     </xsl:result-document>
+    <xsl:for-each select="//*:button[@id='basex-save-button']">
+      <ixsl:set-attribute name="style:display" select="'none'"/>
+    </xsl:for-each>
   </xsl:template>
-  
+
+  <xsl:template match="*[@id eq 'basex-save-button']" mode="ixsl:onclick">
+    <xsl:variable name="xmldoc" as="document-node(element(*))">
+      <xsl:document>
+        <frag xmlns="http://www.le-tex.de/namespace/sxedit" db="PG32856" doc="32856.tei.xml"
+          xpath="/Q{{http://www.tei-c.org/ns/1.0}}TEI[1]/Q{{http://www.tei-c.org/ns/1.0}}text[1]/Q{{http://www.tei-c.org/ns/1.0}}front[1]/Q{{http://www.tei-c.org/ns/1.0}}div[3]">
+          <xsl:call-template name="sxedit:restore"/>
+        </frag>
+      </xsl:document>
+    </xsl:variable>
+    <xsl:variable name="serialized" as="xs:string" select="sxedit:serialize-xml($xmldoc)"/>
+    <xsl:sequence select="ixsl:call(ixsl:window(), 'Sxedit.post', $serialized, 'http://localhost:8984/content/save-frag')"/>
+  </xsl:template>
+    
   <xsl:template match="response[db | doc | frag]" mode="sxedit:nav">
     <li class="dropdown">
       <a href="#" class="dropdown-toggle" data-toggle="dropdown">
@@ -87,7 +105,7 @@
   <xsl:template match="db" mode="sxedit:response-url" as="xs:string">
     <xsl:message select="'db: ', base-uri()"/>
     <xsl:variable name="r" as="xs:string" select="replace(base-uri(), '/dbs', concat('/db/', @name))"/>
-    <xsl:message select="'dbr: ', $r"/>
+<!--    <xsl:message select="'dbr: ', $r"/>-->
     <xsl:sequence select="$r"/>
   </xsl:template>
   
@@ -135,10 +153,22 @@
     <xsl:variable name="url" as="xs:string">
       <xsl:apply-templates select="." mode="sxedit:response-url"/>
     </xsl:variable>
-    <li>
-      <a href="#" data-target="{$url}" class="basex-select">
-        <xsl:value-of select="@title"/>
-      </a>
+    <li class="menu-item dropdown dropdown-submenu">
+      <a href="#"><xsl:value-of select="@title"/></a>
+      <ul class="dropdown-menu">
+        <li class="menu-item">
+          <a href="#" data-target="{$url}" class="basex-select">Open</a>
+        </li>
+        <li class="menu-item">
+          <a href="#">Overwrite with buffer</a>
+        </li>
+        <li class="menu-item">
+          <a href="#">Save buffer before</a>
+        </li>
+        <li class="menu-item">
+          <a href="#">Save buffer after</a>
+        </li>
+      </ul>
     </li>
   </xsl:template>
 
@@ -162,24 +192,29 @@
       </xsl:apply-templates>
       <xsl:apply-templates select="document(sxedit:set-url-param(@data-target, 't', string(ixsl:eval('new Date().getTime()'))))" mode="sxedit:nav"/>
     </xsl:result-document>
+    <xsl:for-each select="//*:button[@id='basex-save-button']">
+      <ixsl:set-attribute name="style:display" select="'none'"/>
+    </xsl:for-each>
   </xsl:template>
 
   <xsl:template match="html:a[sxedit:contains-token(@class, 'basex-select')][matches(@data-target, '/frag/')]" priority="2" mode="ixsl:onclick">
     <!-- replace the fragment heading -->
-    <xsl:result-document href="?select=../ancestor::*:li[1]/*:a" method="ixsl:replace-content">
+    <xsl:result-document href="?select=../ancestor::*:li[2]/*:a" method="ixsl:replace-content">
       <span>
-        <xsl:value-of select="."/>
+        <xsl:value-of select="../ancestor::*:li[1]/*:a"/>
       </span>
       <!-- Dropdown triangle: -->
-      <xsl:sequence select="../ancestor::*:li[1]/*:a/*[not(self::*:span)]"/>
+      <xsl:sequence select="../ancestor::*:li[2]/*:a/*[not(self::*:span)]"/>
     </xsl:result-document>
     <!-- fill the main editor: -->
     <xsl:call-template name="sxedit:render">
       <xsl:with-param name="content" select="document(@data-target)"/>
       <xsl:with-param name="fragment-url" select="@data-target"/>
     </xsl:call-template>
+    <xsl:for-each select="//*:button[@id='basex-save-button']">
+      <ixsl:set-attribute name="style:display" select="'inline'"/>
+    </xsl:for-each>
   </xsl:template>
-  
   
   <xsl:template match="@* | *" mode="sxedit:html-nav">
     <xsl:copy>

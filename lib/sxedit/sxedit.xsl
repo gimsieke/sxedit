@@ -18,8 +18,8 @@
 
   <xsl:include href="saxon-ce-dummy-declarations.xsl"/>
 
-  <!-- cannot use key(), unfortunately, because something that CKE injects into the page. 
-       Probably its iframe. Error messages complain about a QName that is the empty string.
+  <!-- cannot use key(), unfortunately, because of something that CKE injects into the page. 
+       Probably its iframe (even for contenteditable variant). Error messages complain about a QName that is the empty string.
        Need to investigate. -->
   <xsl:key name="by-id" match="*" use="@id"/>
 
@@ -342,6 +342,9 @@
                           )"/>
   </xsl:function>
 
+  <!-- Will set or modify a parameter in the query string of a URL. Parses the URL first
+    into an rfc:url data structure, then sets the param via an xsl:attribute instruction
+    and then re-serializes the URL -->
   <xsl:function name="sxedit:set-url-param" as="xs:string">
     <xsl:param name="url" as="xs:string"/>
     <xsl:param name="param-name" as="xs:string"/>
