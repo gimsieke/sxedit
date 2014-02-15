@@ -206,10 +206,10 @@ declare
   %rest:POST("{$wrapper}")
   %updating 
   function sxedit:save-frag(
-    $wrapper as document-node(element(sxedit:frag))
+    $wrapper as  (: document-node(element(sxedit:frag)) :) xs:string  
   )
   {
-    db:output(
+  db:output(
   <rest:response>
     <http:response status="200">
       <http:header name="Content-Language" value="en"/>
@@ -218,8 +218,10 @@ declare
      </http:response>
   </rest:response>
   ),
-    replace node db:open($wrapper/*:frag/@db, $wrapper/*:frag/@doc)//*[path() eq $wrapper/*:frag/@xpath]
-    with $wrapper/*:frag/*
+    let $doc := parse-xml($wrapper)
+    return
+    replace node db:open($doc/*:frag/@db, $doc/*:frag/@doc)//*[path() eq $doc/*:frag/@xpath]
+    with $doc/*:frag/*
 }
 ;
 

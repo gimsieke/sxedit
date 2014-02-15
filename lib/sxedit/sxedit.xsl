@@ -153,6 +153,11 @@
         <xsl:with-param name="value" select="$fragment-url"/>
         <xsl:with-param name="elt" select="$sxedit-main-div"/>
       </xsl:call-template>
+      <xsl:call-template name="sxedit:set-data-attribute">
+        <xsl:with-param name="name" select="'xpath'"/>
+        <xsl:with-param name="value" select="sxedit:parse-url($fragment-url)/@xpath"/>
+        <xsl:with-param name="elt" select="$sxedit-main-div"/>
+      </xsl:call-template>
     </xsl:if>
     <xsl:apply-templates select="$content" mode="sxedit:create-data-attributes-for-fragment-element">
       <xsl:with-param name="elt" select="$sxedit-main-div"/>

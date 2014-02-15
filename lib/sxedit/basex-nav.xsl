@@ -67,10 +67,11 @@
   </xsl:template>
 
   <xsl:template match="*[@id eq 'basex-save-button']" mode="ixsl:onclick">
+    <xsl:message select="'GGGGGG: ', ancestor::*:div[last()]/descendant-or-self::*:div[@id = 'sxedit-main']/@data-xpath"/>
     <xsl:variable name="xmldoc" as="document-node(element(*))">
       <xsl:document>
         <frag xmlns="http://www.le-tex.de/namespace/sxedit" db="PG32856" doc="32856.tei.xml"
-          xpath="/Q{{http://www.tei-c.org/ns/1.0}}TEI[1]/Q{{http://www.tei-c.org/ns/1.0}}text[1]/Q{{http://www.tei-c.org/ns/1.0}}front[1]/Q{{http://www.tei-c.org/ns/1.0}}div[3]">
+          xpath="{ancestor::*:div[last()]/descendant-or-self::*:div[@id = 'sxedit-main']/@data-xpath}">
           <xsl:call-template name="sxedit:restore"/>
         </frag>
       </xsl:document>
@@ -154,7 +155,7 @@
       <xsl:apply-templates select="." mode="sxedit:response-url"/>
     </xsl:variable>
     <li class="menu-item dropdown dropdown-submenu">
-      <a href="#"><xsl:value-of select="@title"/></a>
+      <a href="#" data-target="{$url}" class="basex-select"><xsl:value-of select="@title"/></a>
       <ul class="dropdown-menu">
         <li class="menu-item">
           <a href="#" data-target="{$url}" class="basex-select">Open</a>
