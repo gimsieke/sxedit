@@ -27,4 +27,6 @@
 
   <xsl:variable name="sxedit:initial-html-schematron-uris" as="xs:string*" select="resolve-uri('html4tei.sch.xml')"/>
 
+  <xsl:param name="sxedit:contains-reserved-element-names" select="true()" as="xs:boolean"/>
+
 </xsl:stylesheet>

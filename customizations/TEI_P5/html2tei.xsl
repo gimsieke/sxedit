@@ -126,6 +126,8 @@
     </xsl:choose>
   </xsl:template>
 
+  <xsl:template match="*:br" mode="sxedit:restore"/>
+
   <xsl:function name="sxedit:isHeading" as="xs:boolean"> 
     <xsl:param name="elt" as="element(*)" /> 
     <xsl:value-of select="matches(local-name($elt), '^h\d$')" /> 

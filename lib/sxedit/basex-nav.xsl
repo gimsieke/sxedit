@@ -76,7 +76,8 @@
         </frag>
       </xsl:document>
     </xsl:variable>
-    <xsl:variable name="serialized" as="xs:string" select="sxedit:serialize-xml($xmldoc)"/>
+    <!-- Note that the XQuery in the storage tier has to handle unescaping <______head> and <_____body> -->  
+    <xsl:variable name="serialized" as="xs:string" select="sxedit:serialize-xml($xmldoc, false())"/>
     <xsl:sequence select="ixsl:call(ixsl:window(), 'Sxedit.post', $serialized, 'http://localhost:8984/content/save-frag')"/>
   </xsl:template>
     

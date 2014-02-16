@@ -28,7 +28,7 @@ declare
     { for $db in db:list()
       where 
         if (exists($doc-condition))
-        then xquery:eval( "exists(db:open($db)/*" || $doc-condition || ")", map { "db" := $db } )
+        then xquery:eval( "declare variable $db as xs:string external; exists(db:open($db)/*" || $doc-condition || ")", map { "db" := $db } )
         else true()
       return <db name="{$db}"/> }
   </response>
@@ -49,7 +49,9 @@ declare
     { for $doc in db:list($db)
       where 
         if (exists($doc-condition))
-        then xquery:eval( "exists(db:open($db, $doc)/*" || $doc-condition || ")", map { "db" := $db, "doc" := $doc })
+        then xquery:eval( "declare variable $db as xs:string external;
+                           declare variable $doc as xs:string external; 
+                           exists(db:open($db, $doc)/*" || $doc-condition || ")", map { "db" := $db, "doc" := $doc })
         else true()
       return <doc name="{$doc}"/> }
   </response>
@@ -91,7 +93,12 @@ declare
   $sxedit:header,
   <response> 
     { for $query as xs:string in 
-       'for $docroot in db:open($db, $doc)
+       'declare variable $title-expression as xs:string? external;
+        declare variable $db as xs:string external;
+        declare variable $doc as xs:string external;
+        declare variable $max-title-length as xs:string? external;
+        declare variable $frag-expression as xs:string? external;
+        for $docroot in db:open($db, $doc)
         let $nodes := ($docroot/* | $docroot' || ($frag-expression, "/*")[1] || ')
         return
           for $node as element(*) at $pos in $nodes
@@ -137,7 +144,12 @@ declare
 {
   $sxedit:header,
   for $query as xs:string in 
-   'declare function local:copy(
+   'declare variable $title-expression as xs:string? external;
+    declare variable $db as xs:string external;
+    declare variable $doc as xs:string external;
+    declare variable $xpath as xs:string? external;
+    declare variable $frag-expression as xs:string external;
+    declare function local:copy(
       $element as element(),
       $fragment-ids as xs:integer* 
     ) {
@@ -198,7 +210,12 @@ declare function sxedit:copy(
  : These attributes specify where to store the payload which must 
  : be the only child of the top-level *:frag element.
  : Make sure that the necessary URL escaping will be performed to
- : the query arguments when calling the RESTXQ path. 
+ : the query arguments when calling the RESTXQ path.
+ : Because of some browser insanity, elements with the names
+ : of 'head' and 'body' will be treated as the respective HTML
+ : elements, regardless of the namespace they’re in. Therefore,
+ : by convention, sxedit …2html.xsl should prepend five 
+ : underscores ('_____') to the name. They will be removed here.
  : @param $wrapper The POSTed message
  :)
 declare
@@ -207,7 +224,7 @@ declare
   %updating 
   function sxedit:save-frag(
     $wrapper as  (: document-node(element(sxedit:frag)) :) xs:string  
-  )
+  ) 
   {
   db:output(
   <rest:response>
@@ -218,10 +235,16 @@ declare
      </http:response>
   </rest:response>
   ),
-    let $doc := parse-xml($wrapper)
-    return
-    replace node db:open($doc/*:frag/@db, $doc/*:frag/@doc)//*[path() eq $doc/*:frag/@xpath]
-    with $doc/*:frag/*
-}
-;
-
+    let $doc :=
+      copy $parsed := parse-xml($wrapper)
+      modify (
+        for $n in $parsed/descendant-or-self::*[starts-with(local-name(), '_____')]
+        let $repl := replace(local-name($n), '^_____', ''),
+            $uri := namespace-uri($n)
+        return rename node $n as QName($uri, $repl)
+      )
+      return $parsed
+    return 
+      replace node db:open($doc/*:frag/@db, $doc/*:frag/@doc)//*[path() eq $doc/*:frag/@xpath]
+      with $doc/*:frag/* 
+  };

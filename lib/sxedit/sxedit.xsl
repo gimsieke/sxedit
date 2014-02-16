@@ -23,6 +23,12 @@
        Need to investigate. -->
   <xsl:key name="by-id" match="*" use="@id"/>
 
+  <!-- Whether the target XML vocabulary contains element such as 'head' or 'body' that need to 
+    be escaped regardless of their namespace. Just gotta love browsers, wtf.
+    
+    Is it a good idea to have an xs:boolean typed xsl:param? -->
+  <xsl:param name="sxedit:contains-reserved-element-names" select="false()" as="xs:boolean"/>
+
   <xsl:template name="init">
     <xsl:result-document href="#sxedit" method="ixsl:replace-content">
       <div class="page-header">
@@ -205,7 +211,7 @@
     <xsl:variable name="serialized" as="xs:string+" select="for $svrl in $svrls return ixsl:serialize-xml($svrl)"/>
     <!--<xsl:message select="'SVRLS: ', $serialized"/>-->
     <xsl:variable name="patch-xsl" select="sxedit:transform($svrls[1], '../../lib/sxedit/svrl2xsl.xsl', '')"/>
-    <!--<xsl:message select="'SVRLXSL: ', ixsl:serialize-xml($patch-xsl)"/>-->
+    <!--<xsl:message select="'SVRLXSL: ', ixsl:serialize-xml($patch-xsl, false())"/>-->
     <xsl:variable name="html-frags" select="ixsl:call(
                                               ixsl:window(), 
                                               'Sxedit.transform', 
@@ -235,7 +241,7 @@
     <xsl:variable name="xmldoc" as="document-node(element(*))">
       <xsl:call-template name="sxedit:restore"/>
     </xsl:variable>
-    <xsl:variable name="serialized" as="xs:string" select="sxedit:serialize-xml($xmldoc)"/>
+    <xsl:variable name="serialized" as="xs:string" select="sxedit:serialize-xml($xmldoc, $sxedit:contains-reserved-element-names)"/>
     <xsl:variable name="filename" select="ancestor::*:div[last()]//*[@id = 'download-file-name']/@prop:value" as="xs:string*"/>
     <xsl:sequence select="ixsl:call(ixsl:window(), 'Sxedit.saveTextAsFile', $serialized, $filename)"/>
   </xsl:template>
@@ -372,7 +378,10 @@
 
   <xsl:function name="sxedit:serialize-xml" as="xs:string">
     <xsl:param name="node" as="item()"/>
-    <xsl:sequence select="replace(ixsl:serialize-xml($node), '(&lt;/?)_____', '$1')"/>
+    <xsl:param name="unescape-reserved-names" as="xs:boolean"/>
+    <xsl:sequence select="if ($unescape-reserved-names)
+                          then replace(ixsl:serialize-xml($node), '(&lt;/?)_____', '$1')
+                          else ixsl:serialize-xml($node)"/>
   </xsl:function>
 
   <!-- Invoking XSLT transforms -->
