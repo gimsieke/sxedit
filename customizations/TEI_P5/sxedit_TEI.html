@@ -12,7 +12,8 @@
     <script type="text/javascript" language="javascript">
       CKEDITOR.plugins.addExternal('footnotes', '../../lib/CKE-Plugins/footnotes/');
       CKEDITOR.plugins.addExternal('indexterms', '../../lib/CKE-Plugins/indexterms/');
-      CKEDITOR.config.extraPlugins = 'footnotes,indexterms';
+      CKEDITOR.plugins.addExternal('texzilla', '../../lib/CKE-Plugins/texzilla/');
+      CKEDITOR.config.extraPlugins = 'footnotes,indexterms,texzilla';
     </script>
     
     <script type="text/javascript" language="javascript" src="../../lib/saxon/SaxonceDebug/Saxonce.nocache.js"></script>
