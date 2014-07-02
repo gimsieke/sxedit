@@ -210,7 +210,8 @@
     </xsl:result-document>
     <!-- fill the main editor: -->
     <xsl:call-template name="sxedit:render">
-      <xsl:with-param name="content" select="document(@data-target)"/>
+      <!-- adding some random string to prevent cached results to appear.-->
+      <xsl:with-param name="content" select="document(concat(@data-target, '&#x26;rnd=', sxedit:random-string()))"/>
       <xsl:with-param name="fragment-url" select="@data-target"/>
     </xsl:call-template>
     <xsl:for-each select="//*:button[@id='basex-save-button']">

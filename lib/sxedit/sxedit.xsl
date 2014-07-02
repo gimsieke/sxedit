@@ -231,6 +231,10 @@
     </xsl:result-document>
   </xsl:template>
   
+  <xsl:function name="sxedit:random-string" as="xs:string">
+    <xsl:sequence select="substring(string(ixsl:eval('Math.random()')), 3, 8)"/>
+  </xsl:function>
+  
   <xsl:function name="sxedit:xdm2js" as="item()*">
     <xsl:param name="xdmnode" as="item()"/>
     <!--<xsl:message select="'XDMNODE: ', ixsl:serialize-xml($xdmnode)"/>-->

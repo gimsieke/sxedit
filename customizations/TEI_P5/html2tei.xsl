@@ -29,6 +29,8 @@
     <xsl:copy/>
   </xsl:template>
 
+  <xsl:template match="@class" mode="sxedit:restore"/>
+
   <xsl:template match="*:div[@id = 'sxedit-main']" mode="sxedit:restore">
     <xsl:choose>
       <xsl:when test="@data-element-name">
