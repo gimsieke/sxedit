@@ -189,3 +189,7 @@ span.cke-index-reference-hidden{
   background-color: #c5c5c5;
   border-color: #428bca;
 }
+
+.internal {
+  display:none;
+}

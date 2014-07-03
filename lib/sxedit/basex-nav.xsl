@@ -144,10 +144,15 @@
     <xsl:variable name="url" as="xs:string">
       <xsl:apply-templates select="." mode="sxedit:response-url"/>
     </xsl:variable>
-    <li>
+    <li class="menu-item dropdown dropdown-submenu">
       <a href="#" data-target="{$url}" class="basex-select">
         <xsl:value-of select="@name"/>
       </a>
+      <!--<ul class="dropdown-menu internal">
+        <li class="menu-item">
+          <a href="{$url}">raw <xsl:value-of select="local-name()"/> link</a>
+        </li>
+      </ul>-->
     </li>
   </xsl:template>
 
@@ -156,7 +161,9 @@
       <xsl:apply-templates select="." mode="sxedit:response-url"/>
     </xsl:variable>
     <li class="menu-item dropdown dropdown-submenu">
-      <a href="#" data-target="{$url}" class="basex-select"><xsl:value-of select="@title"/></a>
+      <a href="#" data-target="{$url}" class="basex-select">
+        <xsl:value-of select="@title"/>
+      </a>
       <ul class="dropdown-menu">
         <li class="menu-item">
           <a href="#" data-target="{$url}" class="basex-select">Open</a>
@@ -170,6 +177,10 @@
         <li class="menu-item">
           <a href="#">Save buffer after</a>
         </li>
+        <!--<li class="menu-item internal">
+          <a href="{$url}">raw content fragment</a>
+        </li>-->
+
       </ul>
     </li>
   </xsl:template>
@@ -192,12 +203,16 @@
         <xsl:with-param name="title-span" select="../../preceding-sibling::*:a[1]/*:span[1]" as="element(html:span)" tunnel="yes"/>
         <xsl:with-param name="title-content" select="." as="xs:string" tunnel="yes"/>
       </xsl:apply-templates>
-      <xsl:apply-templates select="document(sxedit:set-url-param(@data-target, 't', string(ixsl:eval('new Date().getTime()'))))" mode="sxedit:nav"/>
+      <xsl:apply-templates select="document(sxedit:set-url-param(@data-target, 'rnd', sxedit:random-string()))" mode="sxedit:nav"/>
     </xsl:result-document>
     <xsl:for-each select="//*:button[@id='basex-save-button']">
       <ixsl:set-attribute name="style:display" select="'none'"/>
     </xsl:for-each>
   </xsl:template>
+
+  <!--<xsl:template match="html:input[@type = 'checkbox'][@id = 'internal-links']">
+    
+  </xsl:template>-->
 
   <xsl:template match="html:a[sxedit:contains-token(@class, 'basex-select')][matches(@data-target, '/frag/')]" priority="2" mode="ixsl:onclick">
     <!-- replace the fragment heading -->
@@ -211,7 +226,7 @@
     <!-- fill the main editor: -->
     <xsl:call-template name="sxedit:render">
       <!-- adding some random string to prevent cached results to appear.-->
-      <xsl:with-param name="content" select="document(concat(@data-target, '&#x26;rnd=', sxedit:random-string()))"/>
+      <xsl:with-param name="content" select="document(sxedit:set-url-param(@data-target, 'rnd', sxedit:random-string()))"/>
       <xsl:with-param name="fragment-url" select="@data-target"/>
     </xsl:call-template>
     <xsl:for-each select="//*:button[@id='basex-save-button']">
